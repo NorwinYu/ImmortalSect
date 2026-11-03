@@ -17,6 +17,8 @@ export interface SaveMeta {
 export interface GameSettings {
   quality: Quality;
   muted: boolean;
+  /** Vibration feedback on touch devices. */
+  haptics: boolean;
 }
 
 interface SaveFile {
@@ -44,7 +46,7 @@ function defaultSettings(): GameSettings {
     typeof window !== 'undefined' &&
     !!window.matchMedia &&
     window.matchMedia('(pointer: coarse)').matches;
-  return { quality: coarse ? 'medium' : 'high', muted: false };
+  return { quality: coarse ? 'medium' : 'high', muted: false, haptics: true };
 }
 
 function emptyFile(): SaveFile {
@@ -57,6 +59,7 @@ function normalizeState(parsed: GameState): GameState {
   if (!Array.isArray(parsed.talked)) parsed.talked = [];
   if (!Array.isArray(parsed.seenEvents)) parsed.seenEvents = [];
   if (!Array.isArray(parsed.log)) parsed.log = [];
+  if (!Array.isArray(parsed.achievements)) parsed.achievements = [];
   if (!parsed.region) parsed.region = 'sect';
   if (!Array.isArray(parsed.regionActions)) parsed.regionActions = [];
   for (const d of parsed.disciples) {

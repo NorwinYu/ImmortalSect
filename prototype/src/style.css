@@ -3347,3 +3347,33 @@ body.shot-mode #letterbox {
   bottom: auto;
   transform: translate(-50%, 0);
 }
+
+/* ── 成就面板 ───────────────────────────────────────────────────────── */
+.achv-row {
+  cursor: default;
+}
+.achv-row.is-locked {
+  opacity: 0.42;
+}
+.achv-row em {
+  opacity: 0.7;
+}
+
+/* 触感开关仅在触屏设备出现 */
+.touch-only {
+  display: none !important;
+}
+html.is-touch .sect-btn.touch-only {
+  display: inline-block !important;
+}
+
+/* 按键按下反馈（触屏尤其需要） */
+.is-touch .chip:active,
+.is-touch .sect-btn:active,
+.is-touch .gift-btn:active,
+.is-touch .assign-btn:active,
+.is-touch .teach-btn:active,
+.is-touch .story-option:active {
+  transform: scale(0.96);
+  filter: brightness(1.25);
+}

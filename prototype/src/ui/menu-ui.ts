@@ -18,6 +18,7 @@ interface Callbacks {
   onTitleBack: () => void;
   onQuality: () => void;
   onAudio: () => void;
+  onHaptics: () => void;
   onToast: (message: string) => void;
 }
 
@@ -41,6 +42,8 @@ export class MenuUI {
   private readonly titleAudio = $('title-audio');
   private readonly pauseQuality = $('pause-quality');
   private readonly pauseAudio = $('pause-audio');
+  private readonly titleHaptics = $('title-haptics');
+  private readonly pauseHaptics = $('pause-haptics');
   private readonly importBtn = $('save-import');
   private readonly fileInput = $('save-file') as HTMLInputElement;
   private readonly saveClose = $('save-close');
@@ -67,6 +70,7 @@ export class MenuUI {
     $('title-load').addEventListener('click', () => this.openSaves('load', 'title'));
     this.titleQuality.addEventListener('click', () => this.callbacks.onQuality());
     this.titleAudio.addEventListener('click', () => this.callbacks.onAudio());
+    this.titleHaptics.addEventListener('click', () => this.callbacks.onHaptics());
 
     this.pause.addEventListener('click', (event) => {
       const btn = (event.target as HTMLElement).closest<HTMLElement>('[data-pause]');
@@ -83,6 +87,7 @@ export class MenuUI {
     });
     this.pauseQuality.addEventListener('click', () => this.callbacks.onQuality());
     this.pauseAudio.addEventListener('click', () => this.callbacks.onAudio());
+    this.pauseHaptics.addEventListener('click', () => this.callbacks.onHaptics());
 
     this.saveClose.addEventListener('click', () => this.closeSaves());
     this.importBtn.addEventListener('click', () => this.fileInput.click());
@@ -192,6 +197,8 @@ export class MenuUI {
     this.titleQuality.textContent = `画质 · ${q}`;
     this.pauseQuality.textContent = `画质 · ${q}`;
     this.titleAudio.textContent = `音 · ${settings.muted ? '关' : '开'}`;
+    this.titleHaptics.textContent = `触感 · ${settings.haptics ? '开' : '关'}`;
+    this.pauseHaptics.textContent = `触感 · ${settings.haptics ? '开' : '关'}`;
     this.pauseAudio.textContent = `音 · ${settings.muted ? '关' : '开'}`;
   }
 

@@ -743,6 +743,36 @@ try {
     JSON.stringify(curve),
   );
 
+  // ── Achievements ─────────────────────────────────────────────────────────
+  const achv = await page.evaluate(() => {
+    const g = window.__sect.game;
+    g.reset();
+    g.state.trialWins = 3;
+    g.state.sectMerits = 90;
+    g.save(); // unlockPending runs inside save
+    const ids = [...g.state.achievements];
+    // panel renders one row per achievement
+    g.gameUiShowAchievements?.();
+    return { ids, count: ids.length, hasTrial3: ids.includes('trial_3'), hasMerit80: ids.includes('merit_80') };
+  });
+  check('achievements: unlock on state change and persist', achv.hasTrial3 && achv.hasMerit80, JSON.stringify(achv));
+
+  const achvPanel = await page.evaluate(() => {
+    const g = window.__sect.game;
+    g.state.trialWins = 3;
+    g.save();
+    window.__sect.gameUi?.showAchievements();
+    const rows = document.querySelectorAll('#story-options .achv-row').length;
+    const unlocked = document.querySelectorAll('#story-options .achv-row:not(.is-locked)').length;
+    return { rows, unlocked, achievements: g.state.achievements.length };
+  });
+  check(
+    'achievements: panel lists all rows and marks unlocked',
+    achvPanel.rows > 15 && achvPanel.unlocked >= 2 && achvPanel.unlocked <= achvPanel.achievements,
+    JSON.stringify(achvPanel),
+  );
+  await page.evaluate(() => window.__sect.gameUi?.forceClose());
+
   await browser.close();
 } finally {
   server.kill();

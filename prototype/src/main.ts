@@ -27,6 +27,7 @@ import { BuildingUI } from './ui/building-ui';
 import { SLOT_LABEL, type SlotId } from './game/saves';
 import { regionById, type RegionId } from './game/scenes';
 import { playerRealmName } from './game/state';
+import { ACHIEVEMENTS } from './game/achievements';
 
 type Quality = 'high' | 'medium' | 'low';
 
@@ -80,6 +81,16 @@ try {
 engine.renderer.info.autoReset = false;
 
 const input = new Input(engine.renderer.domElement);
+
+/** Short vibration feedback on touch devices (silently no-ops elsewhere). */
+function haptic(ms: number | number[] = 8): void {
+  if (!input.touch || !game?.getSettings().haptics) return;
+  try {
+    navigator.vibrate?.(ms);
+  } catch {
+    /* unsupported */
+  }
+}
 const audio = new Ambience();
 
 let started = false;
@@ -155,6 +166,7 @@ async function boot(): Promise<void> {
   buildingSystem = new BuildingSystem(engine.scene, sect.colliders, game.state);
   gameUi = new GameUI(game, {
     onDayAdvanced: (day) => {
+      haptic(10);
       hour = 7;
       timePaused = false;
       hud.toast(`第 ${day} 日 · 晨`, 2200);
@@ -182,6 +194,7 @@ async function boot(): Promise<void> {
     },
   });
   combat.onVictory = () => {
+    haptic([14, 40, 14]);
     if (game.state.pendingTribulation) {
       const r = game.resolveTribulation(true);
       hud.toast(r.success ? `渡劫成功 · 入${r.realm}` : r.text, 3200);
@@ -193,6 +206,7 @@ async function boot(): Promise<void> {
     }
   };
   combat.onDefeat = () => {
+    haptic(70);
     if (game.state.pendingTribulation) {
       const r = game.resolveTribulation(false);
       hud.toast(r.success ? r.text : '渡劫失败 · 修为跌回，道心受损', 3200);
@@ -202,6 +216,14 @@ async function boot(): Promise<void> {
   combat.onForfeit = () => {
     const message = game.cancelTribulation();
     if (message) hud.toast(message, 2400);
+    gameUi?.sync();
+  };
+
+  // Achievement unlocks surface as a toast + a short haptic.
+  game.onUnlock = (ids) => {
+    const names = ids.map((id) => ACHIEVEMENTS.find((a) => a.id === id)?.name ?? id);
+    hud.toast(`成就达成 · ${names.join('、')}`, 3200);
+    haptic([10, 30, 10]);
     gameUi?.sync();
   };
 
@@ -254,6 +276,7 @@ async function boot(): Promise<void> {
     },
     onQuality: () => cycleQuality(),
     onAudio: () => toggleAudio(),
+    onHaptics: () => toggleHaptics(),
     onToast: (message) => hud.toast(message),
   });
 
@@ -325,6 +348,7 @@ function syncGameHud(): void {
     game.objectiveDesc(),
     game.maxActionPoints,
   );
+  hud.setAchievements(game.state.achievements.length, ACHIEVEMENTS.length);
   const p = game.state.player;
   hud.setPlayerCultivation(playerRealmName(p.realmIndex), p.cultivation, p.bottleneck);
   player?.setMaxQi(p.qiMax, false);
@@ -400,6 +424,14 @@ function cycleQuality(): void {
   game?.setSettings({ quality: next });
   menuUI?.updateSettings();
   hud.toast(`画质 · ${next === 'high' ? '高' : next === 'medium' ? '中' : '低'}`);
+}
+
+function toggleHaptics(): void {
+  const next = !game.getSettings().haptics;
+  game.setSettings({ haptics: next });
+  menuUI?.updateSettings();
+  hud.toast(`触感反馈 · ${next ? '开' : '关'}`);
+  if (next) haptic(18);
 }
 
 function toggleAudio(): void {
@@ -518,6 +550,11 @@ hud.onMap = (): void => {
   regionUI?.toggle(game.state.region, game.state.regionActions);
 };
 hud.onOverview = (): void => toggleOverview();
+hud.onAchievements = (): void => {
+  if (!started || combat.inCombat || player.introActive) return;
+  if (menuUI?.isBlocking || regionUI?.isBlocking || buildingUI?.isBlocking) return;
+  gameUi?.showAchievements();
+};
 
 function toggleOverview(): void {
   if (!started || combat.inCombat || player.introActive) return;

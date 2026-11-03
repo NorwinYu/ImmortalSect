@@ -35,6 +35,7 @@ import { REGIONS, regionById, type RegionId } from './scenes';
 import { BUILDING_BY_ID, isPostSpecialist, nextCost, nextDays, type BuildingId } from './buildings';
 import { allArcsDone, arcProgress, arcSummary, nextArcEvent } from './arcs';
 import { nextDemonEvent } from './demon';
+import { newlyUnlocked } from './achievements';
 
 export interface EndDayResult {
   report: DayReport;
@@ -107,6 +108,8 @@ export class Game {
   isLoaded: boolean;
   playSeconds = 0;
   readonly saves: SaveManager;
+  /** Fired when one or more achievements unlock (wired to a toast by the shell). */
+  onUnlock?: (ids: string[]) => void;
 
   constructor(fresh = false) {
     this.saves = new SaveManager();
@@ -433,6 +436,7 @@ export class Game {
       p.qiMax = 100 + p.realmIndex * 10;
       p.daoHeart = Math.min(100, p.daoHeart + 3);
       p.lifespan += 5;
+      this.state.flags.tribWins = Number(this.state.flags.tribWins ?? 0) + 1;
       this.state.log.unshift({ day: this.state.day, text: `渡过天劫，入${playerRealmName(p.realmIndex)}。`, tone: 'good' });
       this.save();
       return {
@@ -600,6 +604,7 @@ export class Game {
 
     if (eventId === 'tournament') {
       const ending = this.resolveEnding(optionId);
+      this.state.flags.chapterRank = ending.rank;
       this.state.ending = ending;
       this.state.pendingEvent = null;
       this.state.candidates = [];
@@ -1028,7 +1033,18 @@ export class Game {
   }
 
   save(): void {
+    this.unlockPending();
     this.saves.save('auto', this.state, this.playSeconds);
+  }
+
+  /** Record any newly satisfied achievements; returns newly unlocked ids. */
+  unlockPending(): string[] {
+    if (!this.state || !Array.isArray(this.state.achievements)) return [];
+    const ids = newlyUnlocked(this.state);
+    if (!ids.length) return [];
+    this.state.achievements.push(...ids);
+    this.onUnlock?.(ids);
+    return ids;
   }
 
   saveTo(slot: SlotId): SaveMeta {

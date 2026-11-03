@@ -129,6 +129,8 @@ export interface GameState {
   freeMode: boolean;
   actionPoints: number;
   trialWins: number;
+  /** Unlocked achievement ids (see game/achievements.ts). */
+  achievements: string[];
   assignmentsLocked: boolean;
   /** Disciples who left the sect (lost to neglect). */
   departed: string[];
@@ -529,6 +531,7 @@ export function createInitialState(): GameState {
     freeMode: false,
     actionPoints: MAX_ACTION_POINTS,
     trialWins: 0,
+    achievements: [],
     assignmentsLocked: false,
     departed: [],
     region: 'sect',

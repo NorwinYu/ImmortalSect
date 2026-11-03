@@ -2,6 +2,7 @@ import { Game } from '../game/game';
 import { BUILDINGS, buildingEffect } from '../game/buildings';
 import { portraitFor } from '../game/portraits';
 import { dialogueFor, secretKnown, type TalkKind } from '../game/dialogue';
+import { ACHIEVEMENTS } from '../game/achievements';
 import {
   TASKS,
   FAITH_BOONS,
@@ -327,6 +328,49 @@ export class GameUI {
       });
       this.storyOptions.appendChild(btn);
     }
+    this.notifyBlocking();
+  }
+
+  showAchievements(): void {
+    const s = this.game.state;
+    const total = ACHIEVEMENTS.length;
+    const have = ACHIEVEMENTS.filter((a) => s.achievements.includes(a.id)).length;
+    this.openStory();
+    this.storyKicker.textContent = `成就 · 第 ${s.day} 日`;
+    this.storyTitle.textContent = `成 就 ${have}/${total}`;
+    this.storyText.textContent =
+      have >= total
+        ? '这一世能做的，你都做过了。山门记得。'
+        : '有些事做过了就留下痕迹。已解锁的会亮起，未解锁的只留一句提示。';
+    this.storyCast.innerHTML = '';
+    this.storySpeaker.classList.add('is-hidden');
+    this.storyOptions.innerHTML = '';
+    this.storyResult.classList.add('is-hidden');
+
+    for (const a of ACHIEVEMENTS) {
+      const unlocked = s.achievements.includes(a.id);
+      let progress = '';
+      if (a.progress) {
+        const p = a.progress(s);
+        progress = unlocked ? '' : ` · ${Math.min(p.have, p.need)}/${p.need}`;
+      }
+      const row = document.createElement('div');
+      row.className = `story-option achv-row${unlocked ? '' : ' is-locked'}`;
+      row.innerHTML = `
+        <span><b>${unlocked ? a.name : '未解锁'}</b><small>${unlocked ? a.desc : `${a.secret ? '？？？' : a.desc}${progress}`}</small></span>
+        <em>${unlocked ? '已得' : '—'}</em>
+      `;
+      this.storyOptions.appendChild(row);
+    }
+
+    const close = document.createElement('button');
+    close.className = 'story-option subtle';
+    close.innerHTML = `<span><b>收起成就</b><small>继续经营山门</small></span><em>返</em>`;
+    close.addEventListener('click', () => {
+      this.closeStory();
+      this.sync();
+    });
+    this.storyOptions.appendChild(close);
     this.notifyBlocking();
   }
 

@@ -15,6 +15,7 @@ export class Hud {
   onSect?: () => void;
   onMap?: () => void;
   onOverview?: () => void;
+  onAchievements?: () => void;
 
   private readonly loading = $('loading');
   private readonly loadBar = $('load-bar');
@@ -46,6 +47,7 @@ export class Hud {
   private readonly hudCultivation = $('hud-cultivation');
   private readonly btnMap = $('btn-map');
   private readonly btnOverview = $('btn-overview');
+  private readonly btnAchv = $('btn-achv');
 
   private toastTimer = 0;
   private perfVisible = false;
@@ -59,6 +61,7 @@ export class Hud {
     this.btnSect.addEventListener('click', () => this.onSect?.());
     this.btnMap.addEventListener('click', () => this.onMap?.());
     this.btnOverview.addEventListener('click', () => this.onOverview?.());
+    this.btnAchv.addEventListener('click', () => this.onAchievements?.());
     this.helpBtn.addEventListener('click', () => this.openHelp());
     this.helpClose.addEventListener('click', () => this.closeHelp());
     this.help.addEventListener('click', (e) => {
@@ -110,6 +113,10 @@ export class Hud {
       `绘制 ${stats.calls} · 三角面 ${(stats.tris / 1_000_000).toFixed(2)}M\n` +
       `画质 ${q} · 实时`;
     this.perf.classList.toggle('warn', stats.fps < 48);
+  }
+
+  setAchievements(have: number, total: number): void {
+    this.btnAchv.textContent = have >= total ? '成就 ✓' : `成就 ${have}/${total}`;
   }
 
   togglePerf(): void {
