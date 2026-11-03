@@ -1,7 +1,7 @@
 {
   "name": "immortal-sect-prototype",
   "private": true,
-  "version": "0.27.0",
+  "version": "0.28.0",
   "type": "module",
   "description": "《仙宗》Immortal Sect — 用 DeepSeek API 生成的技术 Demo（纯 Web + three.js 修仙宗门），非商业游戏",
   "scripts": {

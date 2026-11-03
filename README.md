@@ -92,6 +92,7 @@ pnpm test:smoke     # 65 项
 - 竖屏会提示「横屏体验更佳」（可关闭）
 
 > 触屏设备会自动把设备像素比上限压到 1.4、首次进入默认「中」画质，以保证帧率。
+> 支持「添加到主屏幕」：装好后以独立窗口全屏运行（PWA manifest + 应用图标）。
 
 ---
 
@@ -148,7 +149,7 @@ pnpm test:smoke     # 65 项
 | 37 | [手机端适配](docs/37-mobile-touch.md) | 虚拟摇杆、触屏交互、重叠修整 |
 | 38 | [季限事件与难度曲线](docs/38-seasons-and-curve.md) | 四季限量事件、天材地宝、要务随周目变陡 |
 | 39 | [成就与手感](docs/39-achievements-and-feel.md) | 23 项成就、触屏震动、按压反馈、设置项 |
-| 40 | [引导与打磨](docs/40-onboarding-and-polish.md) | 首次引导、自动存档回执、标题进场 |
+| 40 | [引导与打磨](docs/40-onboarding-and-polish.md) | 首次引导、自动存档回执、标题进场、添加到主屏幕 |
 
 </details>
 

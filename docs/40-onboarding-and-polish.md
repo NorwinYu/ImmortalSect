@@ -38,8 +38,15 @@
 - 标题卡片的 7 个子元素以 0.1 秒间隔错峰浮入（`titleRise`），返场时重新触发；
 - 与 `DEMO` 标识一起，让首屏更像「有开场」而不是静态菜单。
 
-## 40.4 验收
+## 40.4 装进手机（PWA-lite）
+
+- 新增 `manifest.webmanifest`（standalone、主题色、192/512 图标，含 maskable），
+  配 `apple-touch-icon` 与 `apple-mobile-web-app-*`，手机上「添加到主屏幕」后是全屏无地址栏的独立窗口；
+- 新增 `og-image.jpg` 与 OG / Twitter 卡片 meta，仓库链接分享出去会显示标题与配图；
+- 没有引入 Service Worker —— 避免缓存失效带来「更新了却还是旧版」的经典坑，离线缓存留给以后。
+
+## 40.5 验收
 
 - 冒烟 **65 项**：新增「引导层存在且初始隐藏」「存档提示元素存在」；
 - 端到端实测：4 步走完 → 覆盖层隐藏、`flags.tutorialDone === true`、**已写入 localStorage**；打坐后 HUD 出现「已保存」；
-- 版本 0.27.0。
+- 版本 0.28.0；`dist/` 现含 favicon / apple-touch-icon / icon-192 / icon-512 / manifest / og-image。
