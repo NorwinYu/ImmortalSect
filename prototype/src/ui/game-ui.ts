@@ -333,8 +333,9 @@ export class GameUI {
 
   showAchievements(): void {
     const s = this.game.state;
+    const unlockedIds = Array.isArray(s.achievements) ? s.achievements : [];
     const total = ACHIEVEMENTS.length;
-    const have = ACHIEVEMENTS.filter((a) => s.achievements.includes(a.id)).length;
+    const have = ACHIEVEMENTS.filter((a) => unlockedIds.includes(a.id)).length;
     this.openStory();
     this.storyKicker.textContent = `成就 · 第 ${s.day} 日`;
     this.storyTitle.textContent = `成 就 ${have}/${total}`;
@@ -348,7 +349,7 @@ export class GameUI {
     this.storyResult.classList.add('is-hidden');
 
     for (const a of ACHIEVEMENTS) {
-      const unlocked = s.achievements.includes(a.id);
+      const unlocked = unlockedIds.includes(a.id);
       let progress = '';
       if (a.progress) {
         const p = a.progress(s);

@@ -1,4 +1,5 @@
 import type { GameState } from './state';
+import { initialBuildings } from './buildings';
 
 export type SlotId = 'auto' | '1' | '2' | '3';
 export type Quality = 'high' | 'medium' | 'low';
@@ -85,6 +86,47 @@ function normalizeState(parsed: GameState): GameState {
   if (typeof parsed.season !== 'number') parsed.season = 0;
   if (typeof parsed.lastObjectiveId !== 'string') parsed.lastObjectiveId = '';
   if (!parsed.opening || typeof parsed.opening.name !== 'string') parsed.opening = { name: '青云遗脉', text: '' };
+  if (!parsed.flags || typeof parsed.flags !== 'object') parsed.flags = {};
+  if (!parsed.upgrades || typeof parsed.upgrades !== 'object') parsed.upgrades = {};
+
+  // Buildings added after the save was written must exist or every
+  // `state.buildings[id].level` would throw.
+  if (!parsed.buildings || typeof parsed.buildings !== 'object') {
+    parsed.buildings = initialBuildings();
+  } else {
+    const base = initialBuildings();
+    for (const id of Object.keys(base) as Array<keyof typeof base>) {
+      if (!parsed.buildings[id] || typeof parsed.buildings[id].level !== 'number') {
+        parsed.buildings[id] = base[id];
+      }
+    }
+  }
+
+  // Player fields accrued over releases (artifacts in particular is read with
+  // `.includes()` / `.length`, which throws when undefined).
+  const p = parsed.player;
+  if (p) {
+    if (typeof p.realmIndex !== 'number') p.realmIndex = 2;
+    if (typeof p.cultivation !== 'number') p.cultivation = 20;
+    if (typeof p.root !== 'string') p.root = '水木双灵根';
+    if (typeof p.qiMax !== 'number') p.qiMax = 120;
+    if (typeof p.pills !== 'number') p.pills = 0;
+    if (!Array.isArray(p.techniques)) p.techniques = ['青云剑诀'];
+    if (typeof p.age !== 'number') p.age = 19;
+    if (typeof p.lifespan !== 'number') p.lifespan = 120;
+    if (typeof p.daoHeart !== 'number') p.daoHeart = 60;
+    if (typeof p.karma !== 'number') p.karma = 0;
+    if (typeof p.bottleneck !== 'boolean') p.bottleneck = false;
+    if (typeof p.injury !== 'number') p.injury = 0;
+    if (!Array.isArray(p.artifacts)) p.artifacts = [];
+  }
+
+  const r = parsed.resources;
+  if (r) {
+    for (const key of ['stones', 'herbs', 'insight', 'reputation', 'morale'] as const) {
+      if (typeof r[key] !== 'number') r[key] = key === 'stones' ? 120 : key === 'herbs' ? 40 : key === 'insight' ? 8 : 12;
+    }
+  }
   return parsed;
 }
 
@@ -218,9 +260,18 @@ export class SaveManager {
       if (!raw) return emptyFile();
       const parsed = JSON.parse(raw) as Partial<SaveFile>;
       if (!parsed || parsed.version !== 2 || typeof parsed.slots !== 'object') return emptyFile();
+      // Older saves predate newer state fields (achievements, technique, …).
+      // Normalise every slot on read, not just on import, otherwise those
+      // fields stay undefined and the first `.length` on them throws.
+      const slots: SaveFile['slots'] = {};
+      for (const stored of Object.values(parsed.slots ?? {})) {
+        const meta = this.asMeta(stored);
+        if (meta) slots[meta.slot] = meta;
+        else console.warn('[saves] dropped an unreadable slot (missing disciples/day)');
+      }
       return {
         version: 2,
-        slots: parsed.slots ?? {},
+        slots,
         settings: { ...defaultSettings(), ...(parsed.settings ?? {}) },
       };
     } catch {

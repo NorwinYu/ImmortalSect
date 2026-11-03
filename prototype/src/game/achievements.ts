@@ -152,15 +152,15 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: 'artifact_1',
     name: '得一至宝',
     desc: '获得第一件掌门法宝。',
-    check: (s) => s.player.artifacts.length >= 1,
-    progress: (s) => ({ have: Math.min(1, s.player.artifacts.length), need: 1 }),
+    check: (s) => (s.player.artifacts?.length ?? 0) >= 1,
+    progress: (s) => ({ have: Math.min(1, s.player.artifacts?.length ?? 0), need: 1 }),
   },
   {
     id: 'artifact_4',
     name: '四宝齐备',
     desc: '集齐四件掌门法宝。',
-    check: (s) => s.player.artifacts.length >= 4,
-    progress: (s) => ({ have: s.player.artifacts.length, need: 4 }),
+    check: (s) => (s.player.artifacts?.length ?? 0) >= 4,
+    progress: (s) => ({ have: s.player.artifacts?.length ?? 0, need: 4 }),
   },
   {
     id: 'faith_1',
@@ -201,8 +201,9 @@ export function achievementById(id: string): Achievement | undefined {
 /** Ids that satisfy their condition but are not yet stored on the state. */
 export function newlyUnlocked(s: GameState): string[] {
   const out: string[] = [];
+  const owned: string[] = Array.isArray(s.achievements) ? s.achievements : [];
   for (const a of ACHIEVEMENTS) {
-    if (s.achievements.includes(a.id)) continue;
+    if (owned.includes(a.id)) continue;
     let ok = false;
     try {
       ok = a.check(s);

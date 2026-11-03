@@ -14,7 +14,7 @@
 | 形态 | 纯前端单页，无后端、无账号、无联机；存档走 `localStorage` |
 | 资产 | **全部程序化生成**——没有外部模型 / 贴图 / 音频文件 |
 | 生成方式 | **DeepSeek API 对话式生成**：设计文档 → 代码 → 构建 → Playwright 冒烟回归 → 部署 |
-| 回归 | 65 项 Playwright 自动化检查（桌面 + 手机 + 布局） |
+| 回归 | 67 项 Playwright 自动化检查（桌面 + 手机 + 布局 + 旧档迁移） |
 
 ---
 
@@ -71,7 +71,7 @@ pnpm build
 node serve.mjs      # → http://127.0.0.1:4175
 
 # 自动化回归（需先 build）
-pnpm test:smoke     # 65 项
+pnpm test:smoke     # 67 项
 ```
 
 参数：`?demo=1` 跳过标题直接开局；`&intro=0&story=0` 跳过序章；`&fight=1` 直接进斗法；`&panel=1` 打开宗门簿；`&t=21` 设定起始时辰。
@@ -150,6 +150,7 @@ pnpm test:smoke     # 65 项
 | 38 | [季限事件与难度曲线](docs/38-seasons-and-curve.md) | 四季限量事件、天材地宝、要务随周目变陡 |
 | 39 | [成就与手感](docs/39-achievements-and-feel.md) | 23 项成就、触屏震动、按压反馈、设置项 |
 | 40 | [引导与打磨](docs/40-onboarding-and-polish.md) | 首次引导、自动存档回执、标题进场、添加到主屏幕 |
+| 41 | [旧存档迁移修复](docs/41-legacy-save-migration.md) | 线上 `undefined.length` 崩溃的根因与回归 |
 
 </details>
 

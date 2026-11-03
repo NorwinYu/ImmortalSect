@@ -725,21 +725,32 @@ try {
     const g = window.__sect.game;
     g.reset();
     g.state.freeMode = true;
+    // Pin the RNG so both rolls pick the same objective id — otherwise the two
+    // targets come from different metrics and aren't comparable.
+    const orig = Math.random;
+    Math.random = () => 0;
     const roll = (cycle, day) => {
       g.state.cycle = cycle;
       g.state.day = day;
       g.state.dailyObjective = { id: '__none', metric: 'herbs', target: 1, done: true };
       g.state.lastObjectiveId = '__none';
       g.rollObjective();
-      return g.state.dailyObjective;
+      return { ...g.state.dailyObjective };
     };
     const early = roll(0, 1);
     const late = roll(4, 120);
-    return { earlyScale: early.scale, lateScale: late.scale, earlyTarget: early.target, lateTarget: late.target };
+    Math.random = orig;
+    return {
+      earlyScale: early.scale,
+      lateScale: late.scale,
+      earlyTarget: early.target,
+      lateTarget: late.target,
+      sameId: early.id === late.id,
+    };
   });
   check(
     'objective: difficulty rises with cycle and late days',
-    Math.abs(curve.earlyScale - 1) < 0.001 && curve.lateScale > 2 && curve.lateTarget > curve.earlyTarget,
+    Math.abs(curve.earlyScale - 1) < 0.001 && curve.lateScale > 2 && curve.sameId && curve.lateTarget > curve.earlyTarget,
     JSON.stringify(curve),
   );
 
@@ -799,6 +810,79 @@ try {
   });
   check('onboarding: tutorial overlay exists and starts hidden', onboarding.exists && onboarding.startHidden, JSON.stringify(onboarding));
   check('autosave: indicator element present', onboarding.indicator, JSON.stringify(onboarding));
+
+  // ── Legacy save migration (fields added after the save was written) ──────
+  const legacyCtx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  const legacyPage = await legacyCtx.newPage();
+  const legacyErrors = [];
+  legacyPage.on('pageerror', (e) => legacyErrors.push(e.message));
+  legacyPage.on('console', (m) => {
+    if (m.type() === 'error') legacyErrors.push(m.text());
+  });
+  await legacyPage.goto(`${BASE}/?demo=1&story=0&intro=0&fresh=1&auto=0`, { waitUntil: 'load', timeout: 150_000 });
+  await legacyPage.waitForFunction(() => document.getElementById('loading')?.classList.contains('is-hidden'), null, { timeout: 150_000 });
+  await legacyPage.waitForTimeout(600);
+  const stripped = await legacyPage.evaluate(() => {
+    window.__sect.game.save();
+    const file = JSON.parse(localStorage.getItem('immortal-sect-saves-v2'));
+    const st = file.slots.auto.state;
+    delete st.achievements;
+    delete st.sectFaith;
+    delete st.faithBought;
+    delete st.faithRankIndex;
+    delete st.cycle;
+    delete st.upgrades;
+    delete st.buildings.array; // building added later
+    delete st.player.artifacts; // field added later, read via .includes()
+    for (const d of st.disciples) delete d.technique;
+    localStorage.setItem('immortal-sect-saves-v2', JSON.stringify(file));
+    return { hadAchievements: 'achievements' in st };
+  });
+  // Reload WITHOUT fresh=1 so the stripped save is actually loaded.
+  await legacyPage.goto(`${BASE}/?demo=1&story=0&intro=0&auto=0`, { waitUntil: 'load', timeout: 150_000 });
+  await legacyPage.waitForFunction(() => document.getElementById('loading')?.classList.contains('is-hidden'), null, { timeout: 150_000 });
+  await legacyPage.waitForTimeout(900);
+  const legacy = await legacyPage.evaluate(() => {
+    const g = window.__sect.game;
+    g.state.player.cultivation = 10; // make meditation possible
+    g.state.player.bottleneck = false;
+    g.state.actionPoints = 3;
+    g.state.playerActions = [];
+    let meditateOk = false;
+    try {
+      meditateOk = g.meditate().ok;
+    } catch {
+      meditateOk = false;
+    }
+    return {
+      achvArray: Array.isArray(g.state.achievements),
+      achievements: g.state.achievements?.length ?? -1,
+      faith: g.state.sectFaith,
+      faithBought: typeof g.state.faithBought,
+      cycle: g.state.cycle,
+      technique: g.state.disciples[0]?.technique,
+      artifacts: Array.isArray(g.state.player.artifacts),
+      arrayBuilding: typeof g.state.buildings.array?.level === 'number',
+      upgrades: typeof g.state.upgrades,
+      meditateOk,
+      chip: document.getElementById('btn-achv')?.textContent,
+    };
+  });
+  check(
+    'legacy save: new fields are migrated on load',
+    !stripped.hadAchievements &&
+      legacy.achvArray &&
+      legacy.faith === 0 &&
+      legacy.faithBought === 'object' &&
+      legacy.technique === null &&
+      legacy.artifacts &&
+      legacy.arrayBuilding &&
+      legacy.upgrades === 'object' &&
+      legacy.meditateOk,
+    JSON.stringify({ stripped, legacy }),
+  );
+  check('legacy save: no runtime errors after loading old save', legacyErrors.length === 0, legacyErrors.join(' | '));
+  await legacyCtx.close();
 
   await browser.close();
 } finally {

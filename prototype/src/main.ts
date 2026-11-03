@@ -367,7 +367,7 @@ function syncGameHud(): void {
     game.objectiveDesc(),
     game.maxActionPoints,
   );
-  hud.setAchievements(game.state.achievements.length, ACHIEVEMENTS.length);
+  hud.setAchievements(game.state.achievements?.length ?? 0, ACHIEVEMENTS.length);
   const p = game.state.player;
   hud.setPlayerCultivation(playerRealmName(p.realmIndex), p.cultivation, p.bottleneck);
   player?.setMaxQi(p.qiMax, false);
