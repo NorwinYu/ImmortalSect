@@ -4,6 +4,16 @@
 
 ---
 
+## 39.0 实机截图
+
+![成就面板](media/achievements.jpg)
+
+手机端（HUD 直接显示 `成就 x/23`，解锁提示自动换行）：
+
+![手机成就](media/mobile-achievements.jpg)
+
+---
+
 ## 39.1 成就系统（23 项）
 
 `src/game/achievements.ts` 定义 23 条纯谓词成就，覆盖六条线：
