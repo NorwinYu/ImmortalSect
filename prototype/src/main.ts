@@ -728,6 +728,7 @@ function loop(now: number): void {
     touchControls?.setInteract(prompt);
     touchControls?.setCombat(combat.inCombat);
     touchControls?.setBlocked(uiBlocking || helpOpen);
+    document.documentElement.classList.toggle('is-combat', combat.inCombat);
 
     if (!player.introActive && !introDone) {
       finishIntro();

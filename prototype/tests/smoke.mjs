@@ -641,7 +641,108 @@ try {
   check('mobile: joystick drives forward axis and resets', axis.y > 0.3 && Math.abs(axisReset.y) < 0.001, JSON.stringify({ axis, axisReset }));
   check('mobile: no page/console errors', mobileErrors.length === 0, mobileErrors.join(' | '));
 
+  // ── Mobile layout: no overlapping / off-screen core HUD ──────────────────
+  const HUD_SEL = ['.sect-seal', '.sect-meta', '.hud-actions', '.hud-compass', '.touch-stick', '.touch-actions', '.toast', '.enemy-card', '.player-card', '.combo', '.execute'];
+  const probeLayout = (SEL) => {
+    const out = [];
+    for (const sel of SEL) {
+      const el = document.querySelector(sel);
+      if (!el) continue;
+      const r = el.getBoundingClientRect();
+      const cs = getComputedStyle(el);
+      if (cs.display === 'none' || cs.visibility === 'hidden' || cs.opacity === '0' || r.width < 1 || r.height < 1) continue;
+      out.push({ el, sel, x: r.x, y: r.y, w: r.width, h: r.height });
+    }
+    const overlaps = [];
+    for (let i = 0; i < out.length; i++) {
+      for (let j = i + 1; j < out.length; j++) {
+        const a = out[i];
+        const c = out[j];
+        if (a.el.contains(c.el) || c.el.contains(a.el)) continue; // parent/child is fine
+        const ox = Math.min(a.x + a.w, c.x + c.w) - Math.max(a.x, c.x);
+        const oy = Math.min(a.y + a.h, c.y + c.h) - Math.max(a.y, c.y);
+        if (ox > 2 && oy > 2) overlaps.push(`${a.sel}x${c.sel}`);
+      }
+    }
+    const offscreen = out
+      .filter((o) => o.x < -1 || o.y < -1 || o.x + o.w > innerWidth + 1 || o.y + o.h > innerHeight + 1)
+      .map((o) => o.sel);
+    return { overlaps, offscreen };
+  };
+
+  const mobileExplore = await mobilePage.evaluate(probeLayout, HUD_SEL);
+  await mobilePage.evaluate(() => window.__sect.combat.start());
+  await mobilePage.waitForTimeout(500);
+  const mobileCombat = await mobilePage.evaluate(probeLayout, HUD_SEL);
+  check('mobile: HUD has no overlap in explore', mobileExplore.overlaps.length === 0, mobileExplore.overlaps.join(','));
+  check('mobile: HUD has no overlap in combat', mobileCombat.overlaps.length === 0, mobileCombat.overlaps.join(','));
+  check('mobile: HUD nothing off-screen', mobileExplore.offscreen.length === 0 && mobileCombat.offscreen.length === 0, [...mobileExplore.offscreen, ...mobileCombat.offscreen].join(','));
+
   await mobileCtx.close();
+
+  // ── Seasonal limited events ──────────────────────────────────────────────
+  const seasonalCheck = await page.evaluate(() => {
+    const g = window.__sect.game;
+    g.reset();
+    g.state.ending = { rank: 'hold', title: 't', subtitle: '', text: '', epilogues: [], score: 50 };
+    g.enterFreeMode();
+    const probe = (id, day) => {
+      const ev = g.getEventById(id);
+      if (!ev) return null;
+      const savedDay = g.state.day;
+      g.state.day = day;
+      const on = ev.when(g.state);
+      g.state.day = savedDay;
+      return on;
+    };
+    const ids = ['season_spring', 'season_summer', 'season_autumn', 'season_winter'];
+    const days = [2, 5, 8, 11];
+    const inSeason = ids.map((id, i) => probe(id, days[i]));
+    const outOfSeason = ids.map((id, i) => probe(id, days[(i + 1) % 4]));
+    // not offered inside the 12-day chapter
+    g.state.freeMode = false;
+    g.state.day = 2;
+    const inChapter = g.getEventById('season_spring').when(g.state);
+    g.state.freeMode = true;
+    // choosing one applies its effects
+    g.state.day = 2;
+    const before = g.state.resources.herbs;
+    g.choose('season_spring', 'collect');
+    const applied = g.state.resources.herbs > before;
+    return { inSeason, outOfSeason, inChapter, applied, seen: g.state.seenEvents.includes('season_spring') };
+  });
+  check(
+    'season: 4 seasonal events fire only in season, only in free mode',
+    seasonalCheck.inSeason.every((v) => v === true) &&
+      seasonalCheck.outOfSeason.every((v) => v === false) &&
+      seasonalCheck.inChapter === false,
+    JSON.stringify(seasonalCheck),
+  );
+  check('season: picking one applies effects', seasonalCheck.applied && seasonalCheck.seen, JSON.stringify(seasonalCheck));
+
+  // ── Objective difficulty curve ───────────────────────────────────────────
+  const curve = await page.evaluate(() => {
+    const g = window.__sect.game;
+    g.reset();
+    g.state.freeMode = true;
+    const roll = (cycle, day) => {
+      g.state.cycle = cycle;
+      g.state.day = day;
+      g.state.dailyObjective = { id: '__none', metric: 'herbs', target: 1, done: true };
+      g.state.lastObjectiveId = '__none';
+      g.rollObjective();
+      return g.state.dailyObjective;
+    };
+    const early = roll(0, 1);
+    const late = roll(4, 120);
+    return { earlyScale: early.scale, lateScale: late.scale, earlyTarget: early.target, lateTarget: late.target };
+  });
+  check(
+    'objective: difficulty rises with cycle and late days',
+    Math.abs(curve.earlyScale - 1) < 0.001 && curve.lateScale > 2 && curve.lateTarget > curve.earlyTarget,
+    JSON.stringify(curve),
+  );
+
   await browser.close();
 } finally {
   server.kill();

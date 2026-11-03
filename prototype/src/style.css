@@ -3300,3 +3300,50 @@ body.shot-mode #letterbox {
   font-size: 12px !important;
 }
 .touch-jump.is-hidden { display: none !important; }
+
+/* ── 手机端重叠修整 ─────────────────────────────────────────────────── */
+/* 触屏底栏（键盘提示已隐藏）不再保留内边距，避免压住摇杆 */
+.is-touch .hud-bottom { padding: 0; }
+/* 提示条：抬到触控区之上，并允许换行防止横向溢出 */
+.is-touch .toast {
+  bottom: 168px;
+  white-space: normal;
+  max-width: 78vw;
+  text-align: center;
+  line-height: 1.5;
+}
+/* 竖屏窄屏：罗盘会压在顶栏底衬上，直接隐藏 */
+@media (max-width: 760px) {
+  .is-touch .hud-compass { display: none; }
+  .world-prompt { bottom: 196px; }
+  .is-touch .world-prompt { bottom: 208px; }
+}
+
+/* 触屏战斗：隐藏顶栏，战斗卡让开摇杆与技能网格 */
+@media (max-width: 900px) {
+  .is-touch.is-combat .hud-top { display: none; }
+  .is-touch.is-combat .hud-compass { display: none; }
+  .is-touch.is-combat .enemy-card {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    width: auto;
+    background: linear-gradient(180deg, rgba(8, 10, 14, 0.72), rgba(8, 10, 14, 0.3));
+  }
+  .is-touch.is-combat .player-card {
+    left: 10px;
+    right: 10px;
+    bottom: 172px;
+    width: auto;
+    transform: none;
+  }
+  .is-touch.is-combat .combo { top: 34%; right: 12px; }
+  .is-touch.is-combat .execute { top: 40%; }
+}
+
+/* 战斗中提示条改到顶部，避开底部掌门卡与技能区 */
+.is-touch.is-combat .toast {
+  top: 84px;
+  bottom: auto;
+  transform: translate(-50%, 0);
+}

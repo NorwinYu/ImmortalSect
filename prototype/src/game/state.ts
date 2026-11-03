@@ -91,6 +91,8 @@ export interface DailyObjective {
   metric: ObjectiveMetric;
   target: number;
   done: boolean;
+  /** Difficulty multiplier at roll time; also scales the merit reward. */
+  scale?: number;
 }
 
 export interface Opening {
@@ -1558,6 +1560,134 @@ export function seasonOf(day: number): { index: number; name: string; label: str
   return { index, name: SEASONS[index].name, label: SEASONS[index].label };
 }
 
+/**
+ * Seasonal limited events (季限事件) — each fires once per run, in its own
+ * season, and trades a rare material (天材地宝) for a small cost or boon.
+ */
+export const SEASON_EVENTS: StoryEvent[] = [
+  {
+    id: 'season_spring',
+    tier: 2,
+    risk: 'low',
+    title: '春 · 灵雨',
+    kicker: '时令 · 天材地宝',
+    text:
+      '一场带着草木气的细雨落在山门。老药农说，这是开春第一场灵雨，接住了能养一年的药圃。\n' +
+      '只是雨势来得快，去得也快。',
+    priority: 55,
+    when: (s) => s.freeMode && seasonOf(s.day).index === 0 && !s.seenEvents.includes('season_spring'),
+    options: [
+      {
+        id: 'collect',
+        label: '开圃接雨',
+        hint: '药材 +30 · 士气 +3 · 香火 +1',
+        result: '你把药圃的沟渠全开了。灵雨渗进土里，那年的药材长得格外精神。',
+        effects: [{ herbs: 30, morale: 3 }, { faith: 1, flag: { key: 'seasonRain', value: true } }],
+      },
+      {
+        id: 'still',
+        label: '静坐听雨',
+        hint: '心得 +5 · 道心 +2',
+        result: '你在檐下坐了一日。雨声很密，心里却越来越静。',
+        effects: [{ insight: 5, daoHeart: 2 }],
+      },
+    ],
+  },
+  {
+    id: 'season_summer',
+    tier: 2,
+    risk: 'middle',
+    title: '夏 · 地火',
+    kicker: '时令 · 天材地宝',
+    text:
+      '暑气最盛那日，后山裂开一道缝，地火从缝里舔出来。铸剑的匠人说，这是百年一遇的地心火。\n' +
+      '火只旺三天。',
+    priority: 55,
+    when: (s) => s.freeMode && seasonOf(s.day).index === 1 && !s.seenEvents.includes('season_summer'),
+    options: [
+      {
+        id: 'forge',
+        label: '就地铸剑',
+        hint: '灵石 -20 · 声望 +6 · 香火 +1',
+        result: '你把旧剑重新淬了一遍。出炉时，剑身上有一道暗红的光。',
+        effects: [{ stones: -20, reputation: 6 }, { faith: 1, flag: { key: 'seasonFire', value: true } }],
+      },
+      {
+        id: 'avoid',
+        label: '避火闭关',
+        hint: '顾长风修为 +15 · 道心 +2',
+        result: '你退到后山最凉的石室里闭了三天关。出来时，修为涨了一截。',
+        effects: [{ cultivation: { id: 'gu', delta: 15 }, daoHeart: 2 }],
+      },
+    ],
+  },
+  {
+    id: 'season_autumn',
+    tier: 2,
+    risk: 'low',
+    title: '秋 · 丰稔',
+    kicker: '时令 · 天材地宝',
+    text:
+      '秋收那日，粮仓堆到了梁上，药圃的药材也晒满了整个院子。\n' +
+      '弟子们都在等你说一句话。',
+    priority: 55,
+    when: (s) => s.freeMode && seasonOf(s.day).index === 2 && !s.seenEvents.includes('season_autumn'),
+    options: [
+      {
+        id: 'store',
+        label: '封仓入库',
+        hint: '灵石 +40 · 药材 +15',
+        result: '你让人把粮与药都封进库房。冬天还长，得留一点底。',
+        effects: [{ stones: 40, herbs: 15 }],
+      },
+      {
+        id: 'share',
+        label: '分粮与弟子',
+        hint: '士气 +5 · 全体忠诚 +4',
+        result: '每人多分了一斗米、一包药。那天晚上，山门里难得热闹。',
+        effects: [
+          { morale: 5 },
+          { bond: { id: 'gu', delta: 4 } },
+          { bond: { id: 'shen', delta: 4 } },
+          { bond: { id: 'su', delta: 4 } },
+          { bond: { id: 'lu', delta: 4 } },
+          { bond: { id: 'bai', delta: 4 } },
+          { bond: { id: 'qi', delta: 4 } },
+          { bond: { id: 'xuan', delta: 4 } },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'season_winter',
+    tier: 3,
+    risk: 'middle',
+    title: '冬 · 玄冰',
+    kicker: '时令 · 天材地宝',
+    text:
+      '大雪封山，崖底却结出一层不化的玄冰。老执事说，玄冰髓能让渡劫的人多一分活路。\n' +
+      '只是下去取，得赌命。',
+    priority: 56,
+    when: (s) => s.freeMode && seasonOf(s.day).index === 3 && !s.seenEvents.includes('season_winter'),
+    options: [
+      {
+        id: 'risk',
+        label: '亲自下崖取髓',
+        hint: '心得 +6 · 香火 +2 · 掌门受伤',
+        result: '你吊着绳索下到崖底，凿下一小块玄冰髓。上来时手冻裂了，但东西是真的。',
+        effects: [{ insight: 6 }, { faith: 2, playerInjury: 10, flag: { key: 'seasonIce', value: true } }],
+      },
+      {
+        id: 'guard',
+        label: '守岁温酒',
+        hint: '士气 +6 · 声望 +3 · 道心 +2',
+        result: '你把弟子都叫进主殿，温了一夜的酒。没人提渡劫的事。',
+        effects: [{ morale: 6, reputation: 3, daoHeart: 2 }],
+      },
+    ],
+  },
+];
+
 /** Milestone events unlocked by climbing the sect-rank ladder. */
 export const ERA_EVENTS: StoryEvent[] = [
   {
@@ -1768,5 +1898,5 @@ export const ALL_EVENTS = [...STORY_EVENTS, ...PERSONAL_EVENTS, ...RANDOM_EVENTS
 export function getEvent(id: string): StoryEvent | undefined {
   if (id === 'prologue') return PROLOGUE;
   if (id === 'tournament') return STORY_EVENTS.find((e) => e.id === 'tournament');
-  return ALL_EVENTS.find((e) => e.id === id) ?? FREE_EVENTS.find((e) => e.id === id) ?? ARC_EVENTS.find((e) => e.id === id) ?? DEMON_EVENTS.find((e) => e.id === id) ?? ERA_EVENTS.find((e) => e.id === id) ?? RECALL_EVENTS.find((e) => e.id === id);
+  return ALL_EVENTS.find((e) => e.id === id) ?? FREE_EVENTS.find((e) => e.id === id) ?? ARC_EVENTS.find((e) => e.id === id) ?? DEMON_EVENTS.find((e) => e.id === id) ?? ERA_EVENTS.find((e) => e.id === id) ?? SEASON_EVENTS.find((e) => e.id === id) ?? RECALL_EVENTS.find((e) => e.id === id);
 }

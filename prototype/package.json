@@ -1,9 +1,9 @@
 {
   "name": "immortal-sect-prototype",
   "private": true,
-  "version": "0.23.0",
+  "version": "0.24.0",
   "type": "module",
-  "description": "《仙宗》G5 · 二周目功业结转+宗阶被动/寻回支线/圣地域界大比/今日要务/三候选风险判定",
+  "description": "《仙宗》Immortal Sect — 用 DeepSeek API 生成的技术 Demo（纯 Web + three.js 修仙宗门），非商业游戏",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

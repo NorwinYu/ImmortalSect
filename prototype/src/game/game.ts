@@ -12,6 +12,7 @@ import {
   realmName,
   playerRealmName,
   SEASON_BONUS,
+  SEASON_EVENTS,
   SEASONS,
   faithBoon,
   faithLevel,
@@ -654,9 +655,13 @@ export class Game {
     if (pool.length === 0) return;
     const def = pool[Math.floor(Math.random() * pool.length)];
     const cur = metricValue(def.metric, this.state);
-    let target = Math.round(cur + def.delta + Math.floor(this.state.day * def.ramp));
+    // Difficulty curve: steeper later in a run and on higher NG+ cycles.
+    const cycleBoost = Math.min(0.6, (this.state.cycle ?? 0) * 0.15);
+    const lateBoost = Math.min(0.5, Math.max(0, this.state.day - 24) / 120);
+    const difficulty = 1 + cycleBoost + lateBoost;
+    let target = Math.round(cur + def.delta * difficulty + Math.floor(this.state.day * def.ramp));
     if (def.noble) target = Math.min(100, Math.max(cur + 2, target));
-    this.state.dailyObjective = { id: def.id, metric: def.metric, target, done: false };
+    this.state.dailyObjective = { id: def.id, metric: def.metric, target, done: false, scale: difficulty };
     this.state.lastObjectiveId = def.id;
   }
 
@@ -678,7 +683,7 @@ export class Game {
     const v = metricValue(def.metric, this.state);
     if (v >= o.target) {
       o.done = true;
-      this.state.sectMerits += def.merits;
+      this.state.sectMerits += Math.round(def.merits * (o.scale ?? 1));
       this.state.sectFaith += 1;
       const reward = this.applyReward(def.reward);
       const text = `要务达成：${def.label}至 ${o.target}。宗门功业 +${def.merits}，香火 +1，${reward}。`;
@@ -1448,6 +1453,14 @@ export class Game {
       }
     }
     for (const e of RECALL_EVENTS) {
+      if (ids.length >= cap) break;
+      if (e.when(this.state) && !this.state.seenEvents.includes(e.id) && !ids.includes(e.id)) {
+        ids.push(e.id);
+      }
+    }
+    // Seasonal limited events get a guaranteed slot the moment their season
+    // arrives, so the wheel of the year is actually felt.
+    for (const e of SEASON_EVENTS) {
       if (ids.length >= cap) break;
       if (e.when(this.state) && !this.state.seenEvents.includes(e.id) && !ids.includes(e.id)) {
         ids.push(e.id);
