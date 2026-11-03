@@ -49,8 +49,10 @@ export class Hud {
   private readonly btnOverview = $('btn-overview');
   private readonly btnAchv = $('btn-achv');
   private readonly dayCard = $('day-card');
+  private readonly saveIndicator = $('save-indicator');
 
   private toastTimer = 0;
+  private saveTimer = 0;
   private perfVisible = false;
   private uiHidden = false;
   private calendarDay = 1;
@@ -123,6 +125,16 @@ export class Hud {
     void this.dayCard.offsetWidth; // restart the animation
     this.dayCard.classList.add('show');
     window.setTimeout(() => this.dayCard.classList.add('is-hidden'), 1700);
+  }
+
+  /** Brief, unobtrusive "已保存" flash. */
+  flashSaved(): void {
+    const el = this.saveIndicator;
+    el.classList.remove('is-hidden', 'show');
+    void el.offsetWidth;
+    el.classList.add('show');
+    window.clearTimeout(this.saveTimer);
+    this.saveTimer = window.setTimeout(() => el.classList.add('is-hidden'), 1500);
   }
 
   setAchievements(have: number, total: number): void {

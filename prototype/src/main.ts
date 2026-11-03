@@ -22,6 +22,7 @@ import { Game } from './game/game';
 import { GameUI } from './ui/game-ui';
 import { MenuUI } from './ui/menu-ui';
 import { RegionUI } from './ui/region-ui';
+import { Tutorial } from './ui/tutorial';
 import { BuildingSystem } from './world/buildings';
 import { BuildingUI } from './ui/building-ui';
 import { SLOT_LABEL, type SlotId } from './game/saves';
@@ -118,6 +119,8 @@ let gameUi: GameUI | null = null;
 let menuUI: MenuUI | null = null;
 let regionUI: RegionUI | null = null;
 let touchControls: TouchControls | null = null;
+let tutorial: Tutorial | null = null;
+let saveFlashAt = 0;
 let playSeconds = 0;
 let combatHidden = false;
 
@@ -291,6 +294,21 @@ async function boot(): Promise<void> {
     },
     engine.renderer.domElement,
   );
+
+  tutorial = new Tutorial(input.touch);
+  tutorial.onDone = () => {
+    game.state.flags.tutorialDone = true;
+    game.save();
+    hud.toast('按 B 打开宗门簿 · Esc 暂停 · H 隐藏界面', 3200);
+  };
+
+  // Throttled autosave indicator.
+  game.onSaved = () => {
+    const now = performance.now();
+    if (now - saveFlashAt < 1600) return;
+    saveFlashAt = now;
+    hud.flashSaved();
+  };
 
   hud.setProgress(0.9, '正在点灯…');
   await nextFrame();
@@ -634,6 +652,10 @@ window.addEventListener('keydown', (e) => {
     hud.togglePerf();
     return;
   }
+  if (tutorial?.isBlocking) {
+    if (e.code === 'Escape' || e.code === 'Enter' || e.code === 'Space') tutorial.finish();
+    return;
+  }
   if (e.code === 'Escape') {
     if (buildingUI?.handleEscape()) return;
     if (gameUi?.handleEscape()) return;
@@ -721,7 +743,8 @@ function loop(now: number): void {
   elapsed += dt;
 
   const helpOpen = hud.helpOpen;
-  const uiBlocking = (gameUi?.isBlocking ?? false) || (menuUI?.isBlocking ?? false) || (regionUI?.isBlocking ?? false) || (buildingUI?.isBlocking ?? false);
+  const baseBlocking = (gameUi?.isBlocking ?? false) || (menuUI?.isBlocking ?? false) || (regionUI?.isBlocking ?? false) || (buildingUI?.isBlocking ?? false);
+  const uiBlocking = baseBlocking || (tutorial?.isBlocking ?? false);
   const allowControl = started && introDone && !helpOpen && !uiBlocking && !overviewMode;
   input.setEnabled(allowControl);
 
@@ -763,6 +786,12 @@ function loop(now: number): void {
     }
     hud.setWorldPrompt(prompt);
     hud.setCombatHints(combat.inCombat);
+    if (
+      started && introDone && !demo && !baseBlocking && !combat.inCombat &&
+      !game.state.flags.tutorialDone && tutorial && !tutorial.isBlocking
+    ) {
+      tutorial.begin();
+    }
     touchControls?.setInteract(prompt);
     touchControls?.setCombat(combat.inCombat);
     touchControls?.setBlocked(uiBlocking || helpOpen);

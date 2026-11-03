@@ -110,6 +110,8 @@ export class Game {
   readonly saves: SaveManager;
   /** Fired when one or more achievements unlock (wired to a toast by the shell). */
   onUnlock?: (ids: string[]) => void;
+  /** Fired after a successful autosave (the shell shows a small indicator). */
+  onSaved?: () => void;
 
   constructor(fresh = false) {
     this.saves = new SaveManager();
@@ -1035,6 +1037,7 @@ export class Game {
   save(): void {
     this.unlockPending();
     this.saves.save('auto', this.state, this.playSeconds);
+    this.onSaved?.();
   }
 
   /** Record any newly satisfied achievements; returns newly unlocked ids. */

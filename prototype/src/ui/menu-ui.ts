@@ -162,6 +162,13 @@ export class MenuUI {
     this.title.classList.remove('is-hidden');
     this.renderTitle();
     this.updateSettings();
+    // Re-trigger the staggered entrance each time the title is shown.
+    const card = this.title.querySelector('.title-card');
+    card?.classList.remove('is-in');
+    if (card) {
+      void (card as HTMLElement).offsetWidth;
+      card.classList.add('is-in');
+    }
   }
 
   openPause(): void {

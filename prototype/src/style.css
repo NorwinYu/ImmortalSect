@@ -3414,3 +3414,121 @@ html.is-touch .sect-btn.touch-only {
   68% { opacity: 1; }
   100% { opacity: 0; }
 }
+
+/* 自动存档提示 */
+.save-indicator {
+  position: absolute;
+  right: 34px;
+  bottom: 84px;
+  z-index: 9;
+  padding: 5px 12px;
+  border: 1px solid rgba(200, 161, 90, 0.28);
+  background: rgba(8, 10, 14, 0.5);
+  color: rgba(232, 211, 164, 0.6);
+  font-family: var(--serif);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.save-indicator.show {
+  opacity: 1;
+}
+.is-touch .save-indicator {
+  bottom: 150px;
+  right: 14px;
+  font-size: 9px;
+}
+
+/* 新手引导 */
+#tutorial {
+  position: absolute;
+  inset: 0;
+  z-index: 52;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 50% 44%, rgba(200, 161, 90, 0.08), transparent 46%), rgba(4, 6, 9, 0.86);
+  backdrop-filter: blur(8px);
+  transition: opacity 0.35s ease;
+}
+.tutorial-card {
+  position: relative;
+  width: min(560px, 90vw);
+  padding: 34px 38px 28px;
+  background: linear-gradient(165deg, #181d25f7, #080b10fb);
+  border: 1px solid rgba(233, 225, 209, 0.14);
+  box-shadow: 0 50px 160px rgba(0, 0, 0, 0.7);
+}
+.tutorial-card::before {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border: 1px solid rgba(233, 225, 209, 0.06);
+  pointer-events: none;
+}
+.tutorial-kicker {
+  font-size: 8px;
+  letter-spacing: 0.42em;
+  color: rgba(200, 161, 90, 0.62);
+}
+.tutorial-step {
+  position: absolute;
+  top: 34px;
+  right: 38px;
+  font-family: var(--serif);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: rgba(200, 161, 90, 0.7);
+}
+.tutorial-card h2 {
+  margin: 14px 0 14px;
+  font-family: var(--serif);
+  font-size: 30px;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  color: #f0e6d3;
+}
+.tutorial-card p {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 13px;
+  line-height: 2;
+  color: rgba(233, 225, 209, 0.72);
+  white-space: pre-line;
+}
+.tutorial-dots {
+  display: flex;
+  gap: 6px;
+  margin-top: 22px;
+}
+.tutorial-dots i {
+  width: 18px;
+  height: 2px;
+  background: rgba(233, 225, 209, 0.16);
+}
+.tutorial-dots i.on {
+  background: rgba(200, 161, 90, 0.85);
+}
+.tutorial-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+/* 标题页逐项浮入 */
+.title-card.is-in > * {
+  animation: titleRise 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+.title-card.is-in > *:nth-child(1) { animation-delay: 0.05s; }
+.title-card.is-in > *:nth-child(2) { animation-delay: 0.16s; }
+.title-card.is-in > *:nth-child(3) { animation-delay: 0.26s; }
+.title-card.is-in > *:nth-child(4) { animation-delay: 0.36s; }
+.title-card.is-in > *:nth-child(5) { animation-delay: 0.46s; }
+.title-card.is-in > *:nth-child(6) { animation-delay: 0.56s; }
+.title-card.is-in > *:nth-child(7) { animation-delay: 0.66s; }
+@keyframes titleRise {
+  0% { opacity: 0; transform: translateY(14px); }
+  100% { opacity: 1; transform: translateY(0); }
+}

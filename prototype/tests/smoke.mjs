@@ -785,6 +785,21 @@ try {
   });
   check('day card: element exists and animates in', dayCard.exists && dayCard.shown, JSON.stringify(dayCard));
 
+  // ── Onboarding + autosave indicator ─────────────────────────────────────
+  const onboarding = await page.evaluate(() => {
+    const el = document.getElementById('tutorial');
+    const indicator = document.getElementById('save-indicator');
+    const g = window.__sect.game;
+    // tutorial DOM is present and starts closed
+    const startHidden = el ? el.classList.contains('is-hidden') : false;
+    // simulate: mark flag + save fires the autosave callback path
+    const before = indicator ? indicator.classList.contains('show') : false;
+    window.__sect.game.save();
+    return { exists: !!el, startHidden, indicator: !!indicator, before };
+  });
+  check('onboarding: tutorial overlay exists and starts hidden', onboarding.exists && onboarding.startHidden, JSON.stringify(onboarding));
+  check('autosave: indicator element present', onboarding.indicator, JSON.stringify(onboarding));
+
   await browser.close();
 } finally {
   server.kill();

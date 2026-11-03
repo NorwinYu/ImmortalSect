@@ -78,6 +78,7 @@
         </footer>
 
         <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+        <div class="save-indicator is-hidden" id="save-indicator" aria-live="polite">已保存</div>
 
         <div class="world-prompt is-hidden" id="world-prompt">
           <kbd>F</kbd> <span id="world-prompt-text"></span>
@@ -127,6 +128,20 @@
       </div>
 
       <div id="day-card" class="is-hidden" aria-hidden="true"><b>第 1 日</b><span>晨</span></div>
+
+      <div id="tutorial" class="is-hidden" role="dialog" aria-modal="true" aria-label="新手引导">
+        <div class="tutorial-card">
+          <div class="tutorial-kicker">初次入山 · GUIDE</div>
+          <div class="tutorial-step" id="tutorial-step">1 / 4</div>
+          <h2 id="tutorial-title">走一走</h2>
+          <p id="tutorial-text"></p>
+          <div class="tutorial-dots" id="tutorial-dots"></div>
+          <div class="tutorial-actions">
+            <button id="tutorial-skip" class="sect-btn" type="button">跳过引导</button>
+            <button id="tutorial-next" class="sect-btn primary" type="button">下一步</button>
+          </div>
+        </div>
+      </div>
 
       <div id="building-markers" class="is-hidden" aria-label="建筑标记"></div>
 
