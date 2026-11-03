@@ -167,6 +167,7 @@ async function boot(): Promise<void> {
   gameUi = new GameUI(game, {
     onDayAdvanced: (day) => {
       haptic(10);
+      hud.showDayCard(day, '晨');
       hour = 7;
       timePaused = false;
       hud.toast(`第 ${day} 日 · 晨`, 2200);

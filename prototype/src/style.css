@@ -3377,3 +3377,40 @@ html.is-touch .sect-btn.touch-only {
   transform: scale(0.96);
   filter: brightness(1.25);
 }
+
+/* 日期转场卡 */
+#day-card {
+  position: absolute;
+  inset: 0;
+  z-index: 22;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  pointer-events: none;
+  opacity: 0;
+}
+#day-card b {
+  font-family: var(--serif);
+  font-size: clamp(38px, 6vw, 64px);
+  letter-spacing: 0.34em;
+  text-indent: 0.34em;
+  color: rgba(244, 232, 208, 0.96);
+  text-shadow: 0 0 60px rgba(200, 161, 90, 0.35), 0 4px 30px rgba(0, 0, 0, 0.6);
+  font-weight: 400;
+}
+#day-card span {
+  font-family: var(--serif);
+  font-size: 12px;
+  letter-spacing: 0.42em;
+  color: rgba(200, 161, 90, 0.75);
+}
+#day-card.show {
+  animation: dayCardIn 1.7s ease-out;
+}
+@keyframes dayCardIn {
+  0% { opacity: 0; transform: scale(1.06); }
+  16% { opacity: 1; transform: scale(1); }
+  68% { opacity: 1; }
+  100% { opacity: 0; }
+}

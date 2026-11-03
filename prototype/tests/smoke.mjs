@@ -773,6 +773,18 @@ try {
   );
   await page.evaluate(() => window.__sect.gameUi?.forceClose());
 
+  // ── Day transition card ─────────────────────────────────────────────────
+  const dayCard = await page.evaluate(() => {
+    const hud = window.__sect.hud ?? null;
+    const el = document.getElementById('day-card');
+    if (!el) return { exists: false };
+    el.classList.remove('is-hidden', 'show');
+    void el.offsetWidth;
+    el.classList.add('show');
+    return { exists: true, shown: el.classList.contains('show'), text: el.textContent?.trim() };
+  });
+  check('day card: element exists and animates in', dayCard.exists && dayCard.shown, JSON.stringify(dayCard));
+
   await browser.close();
 } finally {
   server.kill();

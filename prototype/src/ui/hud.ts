@@ -48,6 +48,7 @@ export class Hud {
   private readonly btnMap = $('btn-map');
   private readonly btnOverview = $('btn-overview');
   private readonly btnAchv = $('btn-achv');
+  private readonly dayCard = $('day-card');
 
   private toastTimer = 0;
   private perfVisible = false;
@@ -113,6 +114,15 @@ export class Hud {
       `绘制 ${stats.calls} · 三角面 ${(stats.tris / 1_000_000).toFixed(2)}M\n` +
       `画质 ${q} · 实时`;
     this.perf.classList.toggle('warn', stats.fps < 48);
+  }
+
+  /** Big, brief "第 N 日" card when the day rolls over. */
+  showDayCard(day: number, label: string): void {
+    this.dayCard.innerHTML = `<b>第 ${day} 日</b><span>${label}</span>`;
+    this.dayCard.classList.remove('is-hidden', 'show');
+    void this.dayCard.offsetWidth; // restart the animation
+    this.dayCard.classList.add('show');
+    window.setTimeout(() => this.dayCard.classList.add('is-hidden'), 1700);
   }
 
   setAchievements(have: number, total: number): void {
