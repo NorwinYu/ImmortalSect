@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <meta name="theme-color" content="#0b0d12" />
+    <link rel="icon" type="image/png" href="./favicon.png" />
+    <meta name="description" content="《仙宗》Immortal Sect — 宗门经营 · 三候选事件 · 宗阶进阶 · 自由修行 · 纯 Web 修仙宗门" />
+    <title>仙宗 · Immortal Sect</title>
+  </head>
+  <body>
+    <div id="app">
+      <div id="stage" aria-hidden="true"></div>
+      <div id="vignette" aria-hidden="true"></div>
+
+      <div id="hud" class="is-hidden">
+        <header class="hud-top">
+          <div class="sect">
+            <div class="sect-seal">青云</div>
+            <div class="sect-meta">
+              <div class="sect-name">青云宗</div>
+              <div class="sect-en">QING YUN SECT</div>
+              <div class="sect-rule"></div>
+              <div class="sect-date" id="hud-date">天元三百一十二年 · 秋</div>
+              <div class="sect-time" id="hud-time">酉时 · 晴</div>
+              <div class="hud-resources" id="hud-resources">
+                <span>灵石 <b id="hud-stones">120</b></span>
+                <span>药材 <b id="hud-herbs">40</b></span>
+                <span>心得 <b id="hud-insight">8</b></span>
+                <span>声望 <b id="hud-reputation">12</b></span>
+              </div>
+              <div class="hud-objective" id="hud-objective">距三宗大比 · 11 日</div>
+              <div class="hud-region" id="hud-region">青云山门</div>
+              <div class="hud-player" id="hud-player">
+                <span id="hud-realm">炼气三层</span>
+                <i><b id="hud-cultivation"></b></i>
+              </div>
+            </div>
+          </div>
+          <div class="hud-actions">
+            <button id="btn-overview" class="chip" type="button">俯瞰 · C</button>
+            <button id="btn-map" class="chip" type="button">舆图 · V</button>
+            <button id="btn-sect" class="chip chip-sect" type="button">宗门 · B</button>
+            <button id="btn-quality" class="chip" type="button">画质 · 高</button>
+            <button id="btn-audio" class="chip" type="button">音 · 开</button>
+            <button id="btn-help" class="chip chip-icon" type="button" aria-label="帮助">?</button>
+          </div>
+        </header>
+
+        <div class="hud-compass" aria-hidden="true">
+          <span class="compass-tick"></span>
+          <span class="compass-label">北</span>
+        </div>
+
+        <footer class="hud-bottom">
+          <div class="hint" id="hint-explore">
+            <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 行走</span>
+            <span><kbd>Shift</kbd> 疾行</span>
+            <span><kbd>Space</kbd> 跃</span>
+            <span><kbd>拖拽</kbd> 环视</span>
+            <span><kbd>滚轮</kbd> 远近</span>
+            <span><kbd>B</kbd> 宗门</span>
+            <span><kbd>F</kbd> 交谈 / 悟剑</span>
+            <span><kbd>V</kbd> 舆图</span>
+            <span><kbd>C</kbd> 俯瞰</span>
+            <span><kbd>H</kbd> 隐藏界面</span>
+          </div>
+          <div class="hint is-hidden" id="hint-combat">
+            <span><kbd>左键</kbd> 剑</span>
+            <span><kbd>右键</kbd> 重击</span>
+            <span><kbd>Q</kbd> 闪避</span>
+            <span><kbd>E</kbd> 剑气</span>
+            <span><kbd>F</kbd> 处决</span>
+            <span><kbd>Tab</kbd> 锁定</span>
+          </div>
+          <div class="perf" id="perf"></div>
+        </footer>
+
+        <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+        <div class="world-prompt is-hidden" id="world-prompt">
+          <kbd>F</kbd> <span id="world-prompt-text"></span>
+        </div>
+
+        <div id="combat" class="is-hidden">
+          <div class="enemy-card">
+            <div class="enemy-name">试剑傀儡 <span>SWORD PUPPET</span></div>
+            <div class="bar enemy-hp"><i id="enemy-hp"></i></div>
+            <div class="bar enemy-poise"><i id="enemy-poise"></i></div>
+          </div>
+
+          <div class="player-card">
+            <div class="player-label">掌门 · 青云</div>
+            <div class="stat-row"><span>气血</span><div class="bar player-hp"><i id="player-hp"></i></div></div>
+            <div class="stat-row"><span>真气</span><div class="bar player-qi"><i id="player-qi"></i></div></div>
+          </div>
+
+          <div class="combo is-hidden" id="combo"><b>0</b><span>连击</span></div>
+          <div class="execute is-hidden" id="execute">F · 处决</div>
+
+          <div class="combat-banner is-hidden" id="banner"><b></b><span></span></div>
+          <div class="damage-layer" id="damage-layer"></div>
+          <div class="combat-flash" id="combat-flash"></div>
+        </div>
+      </div>
+
+      <div id="letterbox" class="is-hidden" aria-hidden="true">
+        <div class="letterbox-bar top"></div>
+        <div class="letterbox-bar bottom"></div>
+      </div>
+
+      <div id="loading">
+        <div class="loading-ink"></div>
+        <div class="loading-frame">
+          <div class="loading-seal">仙</div>
+          <div class="loading-kicker">IMMORTAL SECT · PROTOTYPE</div>
+          <h1 class="loading-title">仙宗</h1>
+          <p class="loading-sub">青云山门 · 天元三百一十二年</p>
+          <div class="loading-progress"><span id="load-bar"></span></div>
+          <p class="loading-text" id="load-text">正在生成青云山…</p>
+          <button id="start" class="start is-hidden" type="button">
+            <span>踏 入 山 门</span>
+          </button>
+          <p class="loading-foot">纯 Web · three.js · WebGL2</p>
+        </div>
+      </div>
+
+      <div id="building-markers" class="is-hidden" aria-label="建筑标记"></div>
+
+      <div id="overview-list" class="is-hidden" aria-label="宗门营造列表">
+        <div class="overview-head">宗门营造 <span>BUILDINGS</span></div>
+        <div class="overview-items" id="overview-items"></div>
+        <div class="overview-hint">点击建筑名打开面板；也可在 3D 中直接点击建筑。</div>
+      </div>
+
+      <div id="building-panel" class="is-hidden" role="dialog" aria-modal="true" aria-label="建筑">
+        <div class="building-card">
+          <header class="building-head">
+            <div>
+              <div class="building-kicker">BUILDING · 宗门营造</div>
+              <h2 id="building-name">弟子居</h2>
+              <div class="building-sub" id="building-sub"></div>
+            </div>
+            <button id="building-close" class="sect-close" type="button" aria-label="关闭">×</button>
+          </header>
+          <div class="building-body" id="building-body"></div>
+          <footer class="building-foot">
+            <span id="building-cost"></span>
+            <button id="building-upgrade" class="sect-btn primary" type="button">升级</button>
+          </footer>
+        </div>
+      </div>
+
+      <div id="region-map" class="is-hidden" role="dialog" aria-modal="true" aria-label="舆图">
+        <div class="region-card">
+          <header class="region-head">
+            <div>
+              <div class="region-kicker">MAP · 舆图</div>
+              <h2>山门之外</h2>
+            </div>
+            <button id="region-close" class="sect-close" type="button" aria-label="关闭">×</button>
+          </header>
+          <p class="region-intro">青云山不止一座山门。走远一点，才看得见剑冢、药圃与坊市。</p>
+          <div class="region-list" id="region-list"></div>
+          <footer class="region-foot">
+            <span>旅行耗时 2 小时 · 场景动作 4 小时 · 每日各一次</span>
+            <span>V 关闭</span>
+          </footer>
+        </div>
+      </div>
+
+      <div id="title-menu" class="is-hidden" role="dialog" aria-modal="true" aria-label="主菜单">
+        <div class="title-card">
+          <div class="title-kicker">IMMORTAL SECT · CHAPTER I</div>
+          <h1>仙 宗</h1>
+          <p class="title-sub">残山剩水</p>
+          <div class="title-meta" id="title-meta">青云宗 · 七名弟子 · 十二日</div>
+          <div class="title-actions">
+            <button id="title-continue" class="sect-btn primary" type="button">继续</button>
+            <button id="title-new" class="sect-btn" type="button">新的旅程</button>
+            <button id="title-load" class="sect-btn" type="button">载入存档</button>
+          </div>
+          <div class="title-settings">
+            <button id="title-quality" class="sect-btn" type="button">画质 · 高</button>
+            <button id="title-audio" class="sect-btn" type="button">音 · 开</button>
+          </div>
+          <div class="title-foot">程序化水墨 · WebGL2 · 第一章</div>
+        </div>
+      </div>
+
+      <div id="pause-menu" class="is-hidden" role="dialog" aria-modal="true" aria-label="暂停">
+        <div class="pause-card">
+          <div class="pause-kicker">PAUSED · 山中无甲子</div>
+          <h2>青云宗</h2>
+          <div class="pause-meta" id="pause-meta"></div>
+          <div class="pause-actions">
+            <button data-pause="resume" class="sect-btn primary" type="button">继续</button>
+            <button data-pause="save" class="sect-btn" type="button">保存</button>
+            <button data-pause="load" class="sect-btn" type="button">载入</button>
+            <button data-pause="title" class="sect-btn" type="button">回到标题</button>
+          </div>
+          <div class="pause-settings">
+            <button id="pause-quality" class="sect-btn" type="button">画质 · 高</button>
+            <button id="pause-audio" class="sect-btn" type="button">音 · 开</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="save-menu" class="is-hidden" role="dialog" aria-modal="true" aria-label="存档">
+        <div class="save-card">
+          <header class="save-head">
+            <div>
+              <div class="save-kicker">ARCHIVE · 存档</div>
+              <h2 id="save-title">存档</h2>
+            </div>
+            <button id="save-close" class="sect-close" type="button" aria-label="关闭">×</button>
+          </header>
+          <div class="save-list" id="save-list"></div>
+          <footer class="save-foot">
+            <span id="save-note">自动存档在每次行动后更新。</span>
+            <div class="save-tools">
+              <button id="save-import" class="sect-btn" type="button">导入 JSON</button>
+              <input id="save-file" type="file" accept="application/json,.json" hidden />
+            </div>
+          </footer>
+        </div>
+      </div>
+
+      <div id="sect-panel" class="is-hidden" role="dialog" aria-modal="true" aria-label="宗门簿">
+        <div class="sect-sheet">
+          <header class="sect-head">
+            <div class="sect-heading">
+              <div class="sect-ledger-kicker">SECT LEDGER · 宗门簿</div>
+              <h2>青云宗</h2>
+            </div>
+            <div class="sect-day"><b id="sect-day">1</b><span id="sect-day-total">/ 12 日</span></div>
+            <button id="sect-close" class="sect-close" type="button" aria-label="关闭">×</button>
+          </header>
+
+          <div class="sect-res" id="sect-res"></div>
+          <div class="master-strip" id="master-strip"></div>
+          <div class="sect-tutorial" id="sect-tutorial">
+            先为七名弟子安排今日任务，再点「结束今日」。大比在即，每一天都算数。
+          </div>
+
+          <div class="sect-main">
+            <section class="disciple-list" id="sect-disciples" aria-label="弟子"></section>
+            <section class="disciple-detail" id="sect-detail"></section>
+            <aside class="sect-side">
+              <div class="side-block">
+                <h3>宗门营造</h3>
+                <div id="upgrade-list"></div>
+              </div>
+              <div class="side-block">
+                <h3>今日纪事</h3>
+                <div id="sect-log"></div>
+              </div>
+            </aside>
+          </div>
+
+          <footer class="sect-foot">
+            <div class="sect-objective" id="sect-objective"></div>
+            <div class="sect-actions">
+              <button id="sect-trial" class="sect-btn ghost" type="button">试剑台</button>
+              <button id="btn-newgame" class="sect-btn ghost" type="button">新开一局</button>
+              <button id="end-day" class="sect-btn primary" type="button">结束今日</button>
+            </div>
+          </footer>
+        </div>
+      </div>
+
+      <div id="story-modal" class="is-hidden" role="dialog" aria-modal="true" aria-labelledby="story-title">
+        <div class="story-card">
+          <div class="story-kicker" id="story-kicker"></div>
+          <h2 id="story-title"></h2>
+          <div class="story-speaker is-hidden" id="story-speaker">
+            <img id="story-speaker-img" alt="" />
+            <div>
+              <b id="story-speaker-name"></b>
+              <span id="story-speaker-role"></span>
+            </div>
+          </div>
+          <div class="story-text" id="story-text"></div>
+          <div class="story-cast" id="story-cast"></div>
+          <div class="story-options" id="story-options"></div>
+          <div class="story-result is-hidden" id="story-result">
+            <div class="story-result-text" id="story-result-text"></div>
+            <button id="story-continue" class="sect-btn primary" type="button">继续</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="help" class="modal is-hidden" role="dialog" aria-modal="true" aria-labelledby="help-title">
+        <div class="modal-card">
+          <button class="modal-close" id="help-close" type="button" aria-label="关闭">×</button>
+          <div class="modal-kicker">FIELD MANUAL</div>
+          <h2 id="help-title">山门手册</h2>
+          <div class="modal-grid">
+            <div>
+              <h3>行走</h3>
+              <p><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 移动，<kbd>Shift</kbd> 疾行，<kbd>Space</kbd> 跃起；按住左键环视，滚轮缩放。</p>
+              <p>试剑：<kbd>左键</kbd> 连斩 · <kbd>右键</kbd> 重击 · <kbd>Q</kbd> 闪避 · <kbd>E</kbd> 剑气 · <kbd>F</kbd> 处决 · <kbd>Tab</kbd> 锁定。</p>
+              <p>破入大境界，天劫化形为雷劫傀儡——斩之则渡劫成功，败之则境界退回。</p>
+              <p>观时：<kbd>1</kbd>-<kbd>4</kbd> 晨午暮夜，<kbd>T</kbd> 停顿时光，<kbd>F1</kbd> 性能。</p>
+            </div>
+            <div>
+              <h3>一日流程</h3>
+              <p><kbd>B</kbd> 打开宗门簿 → 给弟子安排修炼/采药/巡山/研习/休养 → 驻派建筑 → 结束今日。</p>
+              <p>日终会跳出三张候选事件：选一张、或「今日不接」；主线可顺延，不会丢。</p>
+              <p>页脚有「今日要务」——达成拿资源奖励，累积宗门功业。</p>
+            </div>
+            <div>
+              <h3>宗阶</h3>
+              <p>宗门功业对接到七级宗阶（败落遗宗 → 万古圣地）。每升一阶，香火被动增益（灵石/药材/心得/声望/行动点/候选牌）。</p>
+              <p>跨阶会触发生只一次的时代事件；所谓「只升不降」，是一条自由修行里的长线目标。</p>
+            </div>
+            <div>
+              <h3>人心</h3>
+              <p>被长期冷落或重伤，弟子会生去意并离宗——离宗扣大比分，但可在自由修行里「寻回」。</p>
+              <p>驻派职业对口有额外产出；邻接、维护费、逐日产出都写进日终结算。</p>
+            </div>
+            <div>
+              <h3>关于</h3>
+              <p>《仙宗》G6：纯 Web · three.js · TypeScript，全部资产程序化生成，无外部模型/贴图。</p>
+              <p>十二日章节 + 自由修行 + 人物弧线 + 宗阶进阶 + 天劫 Boss + 季节寿元；WebGL2 渲染。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="fatal" class="fatal is-hidden">
+        <div>
+          <h2>无法启动渲染器</h2>
+          <p id="fatal-text">请使用最新版 Chrome / Edge / Safari，并确认已开启硬件加速。</p>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

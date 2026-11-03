@@ -1,0 +1,26 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# build (dist 由 CI/本地 pnpm build 生成，不入库；GitHub Pages 由 Actions 现场构建)
+/dist/
+/build/
+prototype/dist/
+.vite/
+*.tsbuildinfo
+
+# test / coverage
+coverage/
+playwright-report/
+test-results/
+
+# logs / os
+*.log
+.DS_Store
+
+# env
+.env
+.env.local
+
+# prototype cache
+prototype/.cache/

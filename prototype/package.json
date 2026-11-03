@@ -1,0 +1,24 @@
+{
+  "name": "immortal-sect-prototype",
+  "private": true,
+  "version": "0.22.0",
+  "type": "module",
+  "description": "《仙宗》G5 · 二周目功业结转+宗阶被动/寻回支线/圣地域界大比/今日要务/三候选风险判定",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 4175",
+    "serve": "node serve.mjs",
+    "test:smoke": "node tests/smoke.mjs"
+  },
+  "dependencies": {
+    "simplex-noise": "4.0.3",
+    "three": "0.187.0"
+  },
+  "devDependencies": {
+    "@types/three": "0.187.0",
+    "typescript": "^5.9.0",
+    "vite": "8.3.5",
+    "playwright-core": "1.64.1"
+  }
+}
