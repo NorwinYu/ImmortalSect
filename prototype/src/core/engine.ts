@@ -84,7 +84,12 @@ export class Engine {
       powerPreference: 'high-performance',
     });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
+    // Touch devices render at a much higher DPR; cap harder to protect framerate.
+    const coarse =
+      (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ||
+      (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0);
+    const dprCap = coarse ? 1.4 : 1.75;
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, dprCap));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;

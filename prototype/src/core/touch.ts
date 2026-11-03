@@ -128,6 +128,8 @@ export class TouchControls {
   setCombat(active: boolean): void {
     if (!this.input.touch || !this.combatCluster) return;
     this.combatCluster.classList.toggle('is-hidden', !active);
+    // Jump is pointless mid-duel and eats space on short landscape screens.
+    this.jumpBtn.classList.toggle('is-hidden', active);
   }
 
   /** Hide everything and reset the stick (e.g. when a modal blocks play). */

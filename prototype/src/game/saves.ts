@@ -39,7 +39,12 @@ export const SLOT_LABEL: Record<SlotId, string> = {
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 
 function defaultSettings(): GameSettings {
-  return { quality: 'high', muted: false };
+  // Phones/tablets default to medium to keep the first frames smooth.
+  const coarse =
+    typeof window !== 'undefined' &&
+    !!window.matchMedia &&
+    window.matchMedia('(pointer: coarse)').matches;
+  return { quality: coarse ? 'medium' : 'high', muted: false };
 }
 
 function emptyFile(): SaveFile {

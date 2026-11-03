@@ -3278,3 +3278,25 @@ body.shot-mode #letterbox {
     display: none !important;
   }
 }
+
+/* 触屏（含横屏大屏）：顶栏收紧，省竖向空间 */
+.is-touch .hud-top { padding: 12px 16px; }
+.is-touch .sect-en,
+.is-touch .sect-rule { display: none; }
+.is-touch .sect-name { font-size: 19px; }
+.is-touch .chip { font-size: 9px; padding: 4px 8px; }
+
+/* 战斗按钮改为 3×2 网格：竖排 6 个会超出 390px 高的横屏手机 */
+.touch-combat {
+  display: grid !important;
+  grid-template-columns: repeat(3, 56px);
+  gap: 8px !important;
+  pointer-events: none;
+}
+.touch-combat.is-hidden { display: none !important; }
+.touch-combat button {
+  width: 56px !important;
+  height: 56px !important;
+  font-size: 12px !important;
+}
+.touch-jump.is-hidden { display: none !important; }
