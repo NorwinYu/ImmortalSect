@@ -1,7 +1,7 @@
 {
   "name": "immortal-sect-prototype",
   "private": true,
-  "version": "0.22.0",
+  "version": "0.23.0",
   "type": "module",
   "description": "《仙宗》G5 · 二周目功业结转+宗阶被动/寻回支线/圣地域界大比/今日要务/三候选风险判定",
   "scripts": {

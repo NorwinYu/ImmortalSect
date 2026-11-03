@@ -1,4 +1,4 @@
-/** Keyboard + pointer-drag camera input. */
+/** Keyboard + pointer-drag camera input, augmented with a touch (virtual) surface. */
 export class Input {
   private readonly keys = new Set<string>();
   private deltaX = 0;
@@ -11,6 +11,12 @@ export class Input {
   private lastX = 0;
   private lastY = 0;
   private enabled = true;
+
+  /** Virtual (touch) movement axes: x = strafe right, y = forward (camera-relative, -1..1). */
+  private virtualMove = { x: 0, y: 0 };
+
+  /** Whether the primary pointer is coarse (touch primary). */
+  readonly touch = (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0);
 
   onKey?: (code: string) => void;
 
@@ -58,6 +64,46 @@ export class Input {
     const w = this.wheelDelta;
     this.wheelDelta = 0;
     return w;
+  }
+
+  /** Touch: set the virtual movement stick (x strafe, y forward). */
+  setVirtualMove(x: number, y: number): void {
+    this.virtualMove.x = x;
+    this.virtualMove.y = y;
+  }
+
+  getVirtualMove(): { x: number; y: number } {
+    return this.virtualMove;
+  }
+
+  /** Touch: whether the virtual stick is meaningfully deflected. */
+  isVirtualMoving(): boolean {
+    return Math.hypot(this.virtualMove.x, this.virtualMove.y) > 0.06;
+  }
+
+  /** Touch: momentarily hold a virtual key (auto-releases shortly after). */
+  tapVirtual(code: string): void {
+    this.keys.add(code);
+    window.setTimeout(() => this.keys.delete(code), 90);
+  }
+
+  pressVirtual(code: string): void {
+    this.keys.add(code);
+  }
+
+  releaseVirtual(code: string): void {
+    this.keys.delete(code);
+  }
+
+  /** Touch: inject a combat click (0 = light, 2 = heavy). */
+  injectClick(button: 0 | 2): void {
+    if (button === 0) this.leftClicks++;
+    else this.rightClicks++;
+  }
+
+  /** Touch: feed pinch-zoom as a wheel delta. */
+  addWheel(delta: number): void {
+    this.wheelDelta += delta;
   }
 
   private handleKeyDown = (e: KeyboardEvent): void => {

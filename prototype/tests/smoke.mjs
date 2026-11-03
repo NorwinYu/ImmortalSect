@@ -592,6 +592,56 @@ try {
 
   check('runtime: no page/console errors', errors.length === 0, errors.join(' | '));
 
+  // ── Mobile: touch controls mount, joystick axis feeds movement ────────────
+  const mobileCtx = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    hasTouch: true,
+    isMobile: true,
+    deviceScaleFactor: 2,
+  });
+  const mobilePage = await mobileCtx.newPage();
+  const mobileErrors = [];
+  mobilePage.on('pageerror', (e) => mobileErrors.push(e.message));
+  mobilePage.on('console', (m) => {
+    if (m.type() === 'error') mobileErrors.push(m.text());
+  });
+  await mobilePage.goto(`${BASE}/?demo=1&story=0&intro=0&fresh=1&auto=0`, {
+    waitUntil: 'load',
+    timeout: 150_000,
+  });
+  await mobilePage.waitForFunction(
+    () => document.getElementById('loading')?.classList.contains('is-hidden'),
+    null,
+    { timeout: 150_000 },
+  );
+  await mobilePage.waitForTimeout(700);
+
+  const mobile = await mobilePage.evaluate(() => ({
+    isTouch: document.documentElement.classList.contains('is-touch'),
+    sticks: document.querySelectorAll('.touch-stick').length,
+    jump: !!document.querySelector('.touch-jump'),
+    inputTouch: window.__sect.input.touch,
+  }));
+  check('mobile: touch UI mounts on coarse pointer', mobile.isTouch && mobile.sticks === 1 && mobile.jump && mobile.inputTouch, JSON.stringify(mobile));
+
+  const stickBox = await (await mobilePage.$('.touch-stick')).boundingBox();
+  await mobilePage.evaluate(
+    ([x, y]) => {
+      document.querySelector('.touch-stick').dispatchEvent(
+        new PointerEvent('pointerdown', { pointerId: 9, clientX: x, clientY: y - 40, bubbles: true, button: 0 }),
+      );
+    },
+    [stickBox.x + stickBox.width / 2, stickBox.y + stickBox.height / 2],
+  );
+  const axis = await mobilePage.evaluate(() => window.__sect.input.getVirtualMove());
+  await mobilePage.evaluate(() => {
+    document.querySelector('.touch-stick').dispatchEvent(new PointerEvent('pointerup', { pointerId: 9, bubbles: true, button: 0 }));
+  });
+  const axisReset = await mobilePage.evaluate(() => window.__sect.input.getVirtualMove());
+  check('mobile: joystick drives forward axis and resets', axis.y > 0.3 && Math.abs(axisReset.y) < 0.001, JSON.stringify({ axis, axisReset }));
+  check('mobile: no page/console errors', mobileErrors.length === 0, mobileErrors.join(' | '));
+
+  await mobileCtx.close();
   await browser.close();
 } finally {
   server.kill();

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import './style.css';
 import { Engine } from './core/engine';
 import { Input } from './core/input';
+import { TouchControls } from './core/touch';
 import { Ambience } from './core/audio';
 import { buildTerrain } from './world/terrain';
 import { SkySystem } from './world/sky';
@@ -105,6 +106,7 @@ let game: Game;
 let gameUi: GameUI | null = null;
 let menuUI: MenuUI | null = null;
 let regionUI: RegionUI | null = null;
+let touchControls: TouchControls | null = null;
 let playSeconds = 0;
 let combatHidden = false;
 
@@ -254,6 +256,17 @@ async function boot(): Promise<void> {
     onAudio: () => toggleAudio(),
     onToast: (message) => hud.toast(message),
   });
+
+  touchControls = new TouchControls(
+    input,
+    {
+      onInteract: () => {
+        tryInteract();
+      },
+      onCombat: (code) => combat.handleKey(code),
+    },
+    engine.renderer.domElement,
+  );
 
   hud.setProgress(0.9, '正在点灯…');
   await nextFrame();
@@ -466,7 +479,7 @@ function finishIntro(): void {
   introDone = true;
   input.setEnabled(true);
   hud.setLetterbox(false);
-  hud.toast('WASD 行走 · 拖拽环视 · 1-4 观时', 3200);
+  hud.toast(input.touch ? '左摇杆行走 · 右屏环视 · 双指缩放' : 'WASD 行走 · 拖拽环视 · 1-4 观时', 3200);
 }
 
 function applyQuality(q: Quality): void {
@@ -513,6 +526,39 @@ function toggleOverview(): void {
   hud.setOverview(overviewMode);
   buildingUI?.setOverviewList(overviewMode);
   hud.toast(overviewMode ? '俯瞰 · 点击建筑查看' : '返回行走', 2000);
+}
+
+/** World interaction (talk / region action) — shared by the F key and the touch button. */
+function tryInteract(): boolean {
+  if (!started || combat.inCombat || player.introActive || hud.helpOpen) return false;
+  if (gameUi?.isBlocking || menuUI?.isBlocking || regionUI?.isBlocking || buildingUI?.isBlocking) return false;
+  if (regions.current === 'sect') {
+    const near = named?.nearest(player.position, 3.6);
+    if (near) {
+      gameUi?.showDialogue(near.id);
+      return true;
+    }
+  } else {
+    const action = regions.nearestAction(player.position, 3.8);
+    if (action) {
+      if (action.id === 'market') {
+        hour = (hour + 4) % 24;
+        hud.setTime(hour);
+        gameUi?.showMarket();
+      } else {
+        const result = game.regionAction(action.id);
+        if (!result.ok) {
+          hud.toast(result.text, 2400);
+        } else {
+          hour = (hour + 4) % 24;
+          hud.setTime(hour);
+          gameUi?.showRegionResult(result.title, result.text);
+        }
+      }
+      return true;
+    }
+  }
+  return false;
 }
 
 let pointerStartX = 0;
@@ -609,32 +655,7 @@ window.addEventListener('keydown', (e) => {
   }
 
   if (e.code === 'KeyF' && !combat.inCombat && !hud.helpOpen) {
-    if (regions.current === 'sect') {
-      const near = named?.nearest(player.position, 3.6);
-      if (near) {
-        gameUi?.showDialogue(near.id);
-        return;
-      }
-    } else {
-      const action = regions.nearestAction(player.position, 3.8);
-      if (action) {
-        if (action.id === 'market') {
-          hour = (hour + 4) % 24;
-          hud.setTime(hour);
-          gameUi?.showMarket();
-        } else {
-          const result = game.regionAction(action.id);
-          if (!result.ok) {
-            hud.toast(result.text, 2400);
-          } else {
-            hour = (hour + 4) % 24;
-            hud.setTime(hour);
-            gameUi?.showRegionResult(result.title, result.text);
-          }
-        }
-        return;
-      }
-    }
+    if (tryInteract()) return;
   }
 
   if ((e.code === 'Tab' || e.code === 'KeyQ' || e.code === 'KeyE' || e.code === 'KeyF' || e.code === 'KeyR') && !hud.helpOpen) {
@@ -704,6 +725,9 @@ function loop(now: number): void {
     }
     hud.setWorldPrompt(prompt);
     hud.setCombatHints(combat.inCombat);
+    touchControls?.setInteract(prompt);
+    touchControls?.setCombat(combat.inCombat);
+    touchControls?.setBlocked(uiBlocking || helpOpen);
 
     if (!player.introActive && !introDone) {
       finishIntro();

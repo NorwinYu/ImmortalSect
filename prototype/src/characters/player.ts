@@ -241,10 +241,16 @@ export class Player {
       let right = 0;
 
       if (allowControl && !locked) {
-        fwd = (input.isDown('KeyW') || input.isDown('ArrowUp') ? 1 : 0) -
-          (input.isDown('KeyS') || input.isDown('ArrowDown') ? 1 : 0);
-        right = (input.isDown('KeyD') || input.isDown('ArrowRight') ? 1 : 0) -
-          (input.isDown('KeyA') || input.isDown('ArrowLeft') ? 1 : 0);
+        const vm = input.getVirtualMove();
+        if (input.isVirtualMoving()) {
+          fwd = vm.y;
+          right = vm.x;
+        } else {
+          fwd = (input.isDown('KeyW') || input.isDown('ArrowUp') ? 1 : 0) -
+            (input.isDown('KeyS') || input.isDown('ArrowDown') ? 1 : 0);
+          right = (input.isDown('KeyD') || input.isDown('ArrowRight') ? 1 : 0) -
+            (input.isDown('KeyA') || input.isDown('ArrowLeft') ? 1 : 0);
+        }
       }
 
       const forward = new THREE.Vector3(-Math.sin(this.cameraYaw), 0, -Math.cos(this.cameraYaw));
@@ -257,7 +263,9 @@ export class Player {
         this.lastMove.copy(move);
       }
 
-      const sprint = input.isDown('ShiftLeft') || input.isDown('ShiftRight');
+      const vm = input.getVirtualMove();
+      const isSprintingByStick = input.isVirtualMoving() && Math.hypot(vm.x, vm.y) > 0.85;
+      const sprint = input.isDown('ShiftLeft') || input.isDown('ShiftRight') || isSprintingByStick;
       const targetSpeed = hasMove ? (sprint ? 5.5 : 2.5) : 0;
       this.speed = damp(this.speed, targetSpeed, 9, dt);
 
