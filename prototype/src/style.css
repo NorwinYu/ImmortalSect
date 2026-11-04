@@ -3612,3 +3612,68 @@ html.is-touch .sect-btn.touch-only {
 .touch-rotate.is-suppressed {
   display: none !important;
 }
+
+/* ── 竖屏宗门簿：名册 ⇄ 详情 两级导航 ───────────────────────────────── */
+.detail-back {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 12px;
+  padding: 7px 14px;
+  border: 1px solid rgba(200, 161, 90, 0.4);
+  background: transparent;
+  color: rgba(232, 211, 164, 0.85);
+  font-family: var(--serif);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.detail-back:active {
+  transform: scale(0.97);
+  filter: brightness(1.25);
+}
+
+@media (max-width: 760px) and (orientation: portrait) {
+  /* 名册视图：隐藏详情，只留列表 */
+  .sect-sheet:not(.is-narrow-detail) .disciple-detail {
+    display: none;
+  }
+  /* 详情视图：隐藏名册，详情吃满剩余高度并可独立滚动 */
+  .sect-sheet.is-narrow-detail .disciple-list {
+    display: none;
+  }
+  .sect-sheet.is-narrow-detail .disciple-detail {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .sect-sheet.is-narrow-detail .detail-back {
+    display: inline-flex;
+  }
+  .sect-sheet.is-narrow-detail .sect-side {
+    display: none;
+  }
+  /* 名册：竖排大卡片，一屏约 4 个 */
+  .sect-sheet:not(.is-narrow-detail) .disciple-list {
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border-bottom: 0;
+  }
+  .sect-sheet:not(.is-narrow-detail) .disciple-card {
+    width: 100%;
+    min-width: 0;
+    scroll-snap-align: none;
+  }
+}
+
+/* 横屏手机保留「列表 + 详情」并排的紧凑版 */
+@media (max-width: 900px) and (orientation: landscape) {
+  .detail-back {
+    display: none !important;
+  }
+}

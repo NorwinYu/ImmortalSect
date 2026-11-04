@@ -924,6 +924,36 @@ try {
     sheet.cardH <= sheet.innerH + 2 && !sheet.overflowX && sheet.sideVisible,
     JSON.stringify(sheet),
   );
+  // Portrait uses a two-level flow: roster → full-screen detail → back.
+  const nav = await sheetPage.evaluate(() => {
+    const sheet = document.querySelector('.sect-sheet');
+    const style = (sel) => {
+      const el = document.querySelector(sel);
+      return el ? getComputedStyle(el).display : 'missing';
+    };
+    const roster = { list: style('.disciple-list'), detail: style('.disciple-detail'), cls: sheet.className };
+    document.querySelector('.disciple-card')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    const opened = {
+      list: style('.disciple-list'),
+      detail: style('.disciple-detail'),
+      back: style('.detail-back'),
+      cls: sheet.className,
+    };
+    document.querySelector('[data-back]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    const closed = { cls: sheet.className, detail: style('.disciple-detail') };
+    return { roster, opened, closed };
+  });
+  check(
+    'mobile ledger: roster ⇄ detail navigation',
+    nav.roster.list !== 'none' &&
+      nav.roster.detail === 'none' &&
+      nav.opened.list === 'none' &&
+      nav.opened.detail !== 'none' &&
+      nav.opened.back !== 'none' &&
+      nav.closed.detail === 'none' &&
+      !nav.closed.cls.includes('is-narrow-detail'),
+    JSON.stringify(nav),
+  );
   check('mobile ledger: no runtime errors', sheetErrors.length === 0, sheetErrors.join(' | '));
   await sheetCtx.close();
 

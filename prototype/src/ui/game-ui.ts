@@ -114,9 +114,16 @@ export class GameUI {
       if (!id) return;
       this.selected = id;
       this.render();
+      // Portrait phones show a two-level flow: roster → full-screen detail.
+      this.setNarrowDetail(true);
     });
 
     this.detail.addEventListener('click', (event) => {
+      const back = (event.target as HTMLElement).closest<HTMLElement>('[data-back]');
+      if (back) {
+        this.setNarrowDetail(false);
+        return;
+      }
       const taskBtn = (event.target as HTMLElement).closest<HTMLElement>('[data-task]');
       if (taskBtn?.dataset.task) {
         this.game.assign(this.selected, taskBtn.dataset.task as Task);
@@ -194,12 +201,18 @@ export class GameUI {
     return !this.story.classList.contains('is-hidden');
   }
 
+  /** Toggle the mobile roster ⇄ detail mode on the ledger sheet. */
+  private setNarrowDetail(open: boolean): void {
+    this.panel.querySelector('.sect-sheet')?.classList.toggle('is-narrow-detail', open);
+  }
+
   openPanel(force = false): void {
     if (this.game.ending && !force) {
       this.showEnding(this.game.ending);
       return;
     }
     this.panel.classList.remove('is-hidden');
+    this.setNarrowDetail(false); // always start on the roster
     this.render();
     this.notifyBlocking();
   }
@@ -944,6 +957,7 @@ export class GameUI {
     ] as const;
 
     this.detail.innerHTML = `
+      <button class="detail-back" type="button" data-back="1">‹ 返回名册</button>
       <div class="detail-top">
         <div class="detail-portrait">
           <div class="portrait-mono" style="--robe:${d.palette.robe};--accent:${d.palette.accent}">
