@@ -137,6 +137,9 @@ export class TouchControls {
     if (!this.input.touch || !this.root) return;
     if (blocked) this.onStickUp();
     this.root.classList.toggle('is-blocked', blocked);
+    // The "rotate for a better view" pill must not sit on top of a full-screen
+    // panel such as the sect ledger.
+    this.rotateHint?.classList.toggle('is-suppressed', blocked);
   }
 
   private onStickDown = (e: PointerEvent): void => {

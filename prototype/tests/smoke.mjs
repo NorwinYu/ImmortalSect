@@ -884,6 +884,49 @@ try {
   check('legacy save: no runtime errors after loading old save', legacyErrors.length === 0, legacyErrors.join(' | '));
   await legacyCtx.close();
 
+  // ── Mobile sect ledger: no overlap, fits the viewport ───────────────────
+  const sheetCtx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
+  const sheetPage = await sheetCtx.newPage();
+  const sheetErrors = [];
+  sheetPage.on('pageerror', (e) => sheetErrors.push(e.message));
+  await sheetPage.goto(`${BASE}/?demo=1&story=0&intro=0&fresh=1&auto=0`, { waitUntil: 'load', timeout: 150_000 });
+  await sheetPage.waitForFunction(() => document.getElementById('loading')?.classList.contains('is-hidden'), null, { timeout: 150_000 });
+  await sheetPage.waitForTimeout(600);
+  await sheetPage.evaluate(() => window.__sect.gameUi.openPanel(true));
+  await sheetPage.waitForTimeout(700);
+  const sheet = await sheetPage.evaluate(() => {
+    const box = (sel) => {
+      const el = document.querySelector(sel);
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return { x: r.x, y: r.y, w: r.width, h: r.height, right: r.right, bottom: r.bottom };
+    };
+    const portrait = box('.detail-portrait');
+    const name = box('.detail-name');
+    const card = box('.sect-sheet');
+    return {
+      portraitRight: Math.round(portrait?.right ?? -1),
+      nameLeft: Math.round(name?.x ?? -1),
+      overlap: portrait && name ? portrait.right > name.x + 1 : null,
+      cardH: Math.round(card?.h ?? -1),
+      innerH: window.innerHeight,
+      overflowX: document.documentElement.scrollWidth > window.innerWidth + 1,
+      sideVisible: getComputedStyle(document.querySelector('.sect-side')).display !== 'none',
+    };
+  });
+  check(
+    'mobile ledger: portrait does not overlap the name',
+    sheet.overlap === false,
+    JSON.stringify(sheet),
+  );
+  check(
+    'mobile ledger: sheet fits viewport, no h-overflow, side blocks visible',
+    sheet.cardH <= sheet.innerH + 2 && !sheet.overflowX && sheet.sideVisible,
+    JSON.stringify(sheet),
+  );
+  check('mobile ledger: no runtime errors', sheetErrors.length === 0, sheetErrors.join(' | '));
+  await sheetCtx.close();
+
   await browser.close();
 } finally {
   server.kill();

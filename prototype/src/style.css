@@ -1915,17 +1915,92 @@ body.shot-mode #letterbox {
 }
 
 @media (max-width: 760px) {
-  .sect-sheet { width: 100vw; height: 100vh; }
-  .sect-main { display: flex; flex-direction: column; overflow-y: auto; }
-  .disciple-list { flex-direction: row; overflow-x: auto; border-right: 0; }
-  .disciple-card { min-width: 210px; }
-  .disciple-detail { padding: 18px; }
-  .detail-top { grid-template-columns: 120px 1fr; }
-  .detail-portrait img { width: 120px; height: 156px; }
-  .sect-side { display: none; }
-  .sect-foot { flex-direction: column; align-items: stretch; }
-  .sect-actions { justify-content: flex-end; }
-  .story-card { padding: 30px 24px; }
+  /* 手机：宗门簿铺满可视区，竖向排布不互相压叠 */
+  .sect-sheet {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+  }
+  .sect-head { gap: 12px; padding: 12px 14px 10px; }
+  .sect-heading h2 { font-size: 22px; letter-spacing: 0.16em; }
+  .sect-ledger-kicker { letter-spacing: 0.3em; font-size: 7px; }
+  .sect-day b { font-size: 26px; }
+  .sect-day span { font-size: 9px; }
+  .sect-close { width: 30px; height: 30px; font-size: 17px; }
+  .sect-res { flex-wrap: wrap; gap: 6px; padding: 8px 14px; }
+  .sect-res span { padding: 4px 8px; font-size: 8px; }
+  .master-strip { padding: 10px 14px; gap: 10px; }
+  .sect-main {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .disciple-list {
+    flex: 0 0 auto;
+    flex-direction: row;
+    gap: 8px;
+    padding: 10px 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-right: 0;
+    border-bottom: 1px solid rgba(233, 225, 209, 0.08);
+    scroll-snap-type: x proximity;
+  }
+  .disciple-card {
+    flex: 0 0 auto;
+    min-width: 150px;
+    scroll-snap-align: start;
+  }
+  .disciple-detail {
+    flex: 0 0 auto;
+    padding: 14px 14px 18px;
+    overflow: visible;
+  }
+  /* 头像列原来固定 170px，会盖住右边的姓名与属性 */
+  .detail-top {
+    grid-template-columns: 92px minmax(0, 1fr);
+    gap: 12px;
+  }
+  .detail-portrait,
+  .portrait-mono {
+    width: 92px;
+    height: 120px;
+  }
+  .portrait-mono span { font-size: 46px; }
+  .portrait-mono i { font-size: 8px; letter-spacing: 0.1em; }
+  .detail-seal { font-size: 9px; padding: 3px 5px; bottom: 8px; right: 3px; }
+  .detail-name { font-size: 22px; letter-spacing: 0.1em; }
+  .detail-sub { font-size: 8px; letter-spacing: 0.1em; }
+  .detail-epithet { margin-top: 10px; font-size: 12px; }
+  .detail-quote { margin-top: 12px; font-size: 11px; line-height: 1.8; }
+  .assign-row { grid-template-columns: repeat(5, 1fr); gap: 4px; }
+  .assign-btn { padding: 6px 1px; font-size: 8px; }
+  .assign-btn span { font-size: 14px; margin-bottom: 2px; }
+  .meter-row { gap: 8px; }
+  .care-row { flex-wrap: wrap; gap: 6px; }
+  .gift-btn { margin-top: 10px; padding: 7px 10px; font-size: 8px; }
+  /* 手机上建筑与日志不再隐藏，改为排在详情下方 */
+  .sect-side {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    max-height: none;
+    padding: 14px;
+    border-top: 1px solid rgba(233, 225, 209, 0.08);
+    border-left: 0;
+  }
+  .sect-foot {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px 14px 12px;
+  }
+  .sect-objective { font-size: 9px; letter-spacing: 0.1em; }
+  .sect-actions { justify-content: flex-end; gap: 6px; }
+  .sect-actions .sect-btn { padding: 8px 12px; font-size: 9px; }
+  .story-card { padding: 26px 18px 22px; }
   .story-option { flex-direction: column; align-items: flex-start; gap: 6px; }
 }
 
@@ -3531,4 +3606,9 @@ html.is-touch .sect-btn.touch-only {
 @keyframes titleRise {
   0% { opacity: 0; transform: translateY(14px); }
   100% { opacity: 1; transform: translateY(0); }
+}
+
+/* 打开面板时隐藏横屏提示，避免压在底部按钮上 */
+.touch-rotate.is-suppressed {
+  display: none !important;
 }
