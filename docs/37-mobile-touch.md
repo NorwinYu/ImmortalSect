@@ -75,6 +75,23 @@
 
 实现：`setNarrowDetail()` 在 `.sect-sheet` 上切 `is-narrow-detail`，窄屏竖屏媒体查询里只显示其中一栏；返回按钮 `[data-back]` 走同一套事件委托。
 
+## 37.2d 横屏短屏与刘海屏安全区（0.30.0）
+
+横过来的手机只有 390px 高，原先套用的是桌面三栏，结果名册与详情被压成 46px、底部按钮换行成「试剑/台」。现在为**短屏横屏**单独排了一套：
+
+![横屏宗门簿](media/mobile-ledger-landscape.jpg)
+
+- 一律「左名册(190px) / 右详情」并排，隐藏建筑与日志列；
+- 头部、资源条、掌门条全部压缩（tips 横幅直接隐藏），把高度让给内容；
+- 底部：左侧要务信息单行省略，右侧三个按钮 `nowrap` 一行排开；
+- 覆盖了 760px 以下的竖排规则（否则 740×360 这类尺寸会两套规则打架，详情被撑到 693px 溢出）。
+
+同时补了**刘海屏 / 手势条安全区**：
+
+- viewport 加 `viewport-fit=cover`，全局定义 `--safe-top/bottom/left/right`；
+- HUD 顶栏、摇杆、跳跃/战斗按钮、存档提示、面板底栏都按安全区加 padding，不再被 iPhone 的 Home 指示条或圆角裁掉；
+- `overscroll-behavior: none` 关掉下拉刷新与橡皮筋；按钮统一 `touch-action: manipulation` 去掉双击缩放。
+
 ## 37.3 已修复的坑
 
 - 隐藏的战斗按钮原本仍占布局高度（`.is-hidden` 只改透明度），把「跃」按钮挤出屏幕 → 改为 `display:none`。

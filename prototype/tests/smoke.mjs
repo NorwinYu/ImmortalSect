@@ -957,6 +957,42 @@ try {
   check('mobile ledger: no runtime errors', sheetErrors.length === 0, sheetErrors.join(' | '));
   await sheetCtx.close();
 
+  // ── Short landscape ledger: side-by-side, no overflow, one-line buttons ──
+  const landCtx = await browser.newContext({ viewport: { width: 844, height: 390 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
+  const landPage = await landCtx.newPage();
+  const landErrors = [];
+  landPage.on('pageerror', (e) => landErrors.push(e.message));
+  await landPage.goto(`${BASE}/?demo=1&story=0&intro=0&fresh=1&auto=0`, { waitUntil: 'load', timeout: 150_000 });
+  await landPage.waitForFunction(() => document.getElementById('loading')?.classList.contains('is-hidden'), null, { timeout: 150_000 });
+  await landPage.waitForTimeout(600);
+  await landPage.evaluate(() => window.__sect.gameUi.openPanel(true));
+  await landPage.waitForTimeout(700);
+  const land = await landPage.evaluate(() => {
+    const rect = (sel) => {
+      const el = document.querySelector(sel);
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return { x: r.x, y: r.y, w: r.width, h: r.height, right: r.right, bottom: r.bottom };
+    };
+    const detail = rect('.disciple-detail');
+    const foot = rect('.sect-foot');
+    const buttons = [...document.querySelectorAll('.sect-actions .sect-btn')].map((b) => b.getBoundingClientRect().height);
+    return {
+      detailFits: detail && foot ? detail.bottom <= foot.y + 1 : null,
+      detailH: Math.round(detail?.h ?? -1),
+      ready: getComputedStyle(document.querySelector('.sect-side')).display === 'none',
+      oneLine: buttons.every((h) => h < 40),
+      overflowX: document.documentElement.scrollWidth > window.innerWidth + 1,
+    };
+  });
+  check(
+    'mobile ledger: short landscape keeps side-by-side, no overflow',
+    land.detailFits === true && land.detailH > 100 && land.ready && land.oneLine && !land.overflowX,
+    JSON.stringify(land),
+  );
+  check('mobile ledger: short landscape has no runtime errors', landErrors.length === 0, landErrors.join(' | '));
+  await landCtx.close();
+
   await browser.close();
 } finally {
   server.kill();

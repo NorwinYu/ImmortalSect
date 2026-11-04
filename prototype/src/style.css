@@ -3677,3 +3677,137 @@ html.is-touch .sect-btn.touch-only {
     display: none !important;
   }
 }
+
+/* ── 短屏横屏（手机横放）宗门簿：竖向空间极度紧张 ───────────────────── */
+@media (max-height: 540px) and (orientation: landscape) {
+  .sect-sheet {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+  }
+  .sect-head { padding: 8px 14px 6px; gap: 10px; }
+  .sect-heading h2 { font-size: 18px; letter-spacing: 0.14em; }
+  .sect-ledger-kicker { display: none; }
+  .sect-day b { font-size: 20px; }
+  .sect-day span { font-size: 9px; }
+  .sect-close { width: 28px; height: 28px; font-size: 16px; }
+  .sect-res { flex-wrap: nowrap; gap: 6px; padding: 6px 14px; overflow-x: auto; }
+  .sect-res span { flex: 0 0 auto; padding: 3px 8px; font-size: 8px; }
+  .master-strip { grid-template-columns: 1fr auto; gap: 8px; padding: 6px 14px; }
+  .master-name { font-size: 15px; }
+  .master-meta, .master-tech { font-size: 8px; }
+  .master-actions { gap: 4px; }
+  .master-actions .sect-btn { padding: 5px 9px; font-size: 8px; }
+  .sect-tutorial { display: none; }
+
+  /* 短屏横屏一律「左名册 / 右详情」并排，覆盖 760px 以下的竖排规则 */
+  .sect-main {
+    flex-direction: row;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .sect-side { display: none; }
+  .disciple-list {
+    flex: 0 0 auto;
+    flex-direction: column;
+    width: 190px;
+    min-width: 190px;
+    padding: 8px;
+    gap: 6px;
+    overflow-y: visible;
+    overflow-x: hidden;
+    border-right: 1px solid rgba(233, 225, 209, 0.08);
+  }
+  .disciple-card { min-width: 0; }
+  .disciple-detail { flex: 1 1 auto; min-width: 0; padding: 12px 14px; overflow: visible; }
+  .detail-top { grid-template-columns: 80px minmax(0, 1fr); gap: 10px; }
+  .detail-portrait, .portrait-mono { width: 80px; height: 104px; }
+  .portrait-mono span { font-size: 40px; }
+  .detail-name { font-size: 19px; letter-spacing: 0.08em; }
+  .detail-sub { font-size: 8px; }
+  .detail-epithet { margin-top: 8px; font-size: 11px; }
+  .assign-row { grid-template-columns: repeat(5, 1fr); gap: 4px; }
+  .assign-btn { padding: 5px 1px; font-size: 7px; }
+  .assign-btn span { font-size: 12px; }
+  .gift-btn { margin-top: 8px; padding: 6px 9px; font-size: 8px; }
+
+  .sect-foot {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 14px;
+  }
+  .sect-objective {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 8px;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sect-actions { flex: 0 0 auto; flex-wrap: nowrap; gap: 6px; }
+  .sect-actions .sect-btn {
+    padding: 6px 10px;
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+}
+
+/* ── 刘海屏 / 手势条安全区 + 触屏手势兜底 ───────────────────────────── */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
+html,
+body {
+  overscroll-behavior: none; /* 关掉下拉刷新 / 橡皮筋 */
+  -webkit-text-size-adjust: 100%;
+}
+
+button {
+  touch-action: manipulation; /* 禁掉双击缩放 */
+}
+
+.is-touch .hud-top {
+  padding-top: calc(12px + var(--safe-top));
+  padding-left: calc(14px + var(--safe-left));
+  padding-right: calc(14px + var(--safe-right));
+}
+
+.is-touch .hud-bottom {
+  padding-bottom: calc(10px + var(--safe-bottom));
+}
+
+.is-touch .touch-stick {
+  left: calc(22px + var(--safe-left));
+  bottom: calc(26px + var(--safe-bottom));
+}
+
+.is-touch .touch-actions {
+  right: calc(20px + var(--safe-right));
+  bottom: calc(26px + var(--safe-bottom));
+}
+
+.is-touch .touch-rotate {
+  bottom: calc(16px + var(--safe-bottom)) !important;
+}
+
+.is-touch .save-indicator {
+  right: calc(14px + var(--safe-right));
+  bottom: calc(150px + var(--safe-bottom));
+}
+
+/* 全屏面板：给底部手势条留出空间 */
+.sect-sheet .sect-foot {
+  padding-bottom: calc(10px + var(--safe-bottom));
+}
+.tutorial-card,
+.story-card {
+  margin-bottom: var(--safe-bottom);
+}
